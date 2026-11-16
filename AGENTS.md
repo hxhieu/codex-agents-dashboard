@@ -43,4 +43,4 @@ Initial history contains only `init commit`; no convention is established. Use i
 
 ## Architecture & Security
 
-Preserve direct hooks, one server process, browser-only state, and no persistence. Keep Astro session storage disabled. Whitelist machine/session/event, directory, tool/call ID, and subagent metadata; discard prompts, commands, and outputs. Keep credentials out of source, preserve existing hooks when merging, and restrict the unauthenticated server to trusted LANs.
+Preserve direct hooks, one server process, browser-only agent state, and no agent-history persistence. The theme preference is the only value saved in localStorage. Apply it before rendering through `public/theme.js`; share palette variables in `src/styles/theme.css`. Keep Astro session storage disabled. Whitelist machine/session/event, directory, tool/call ID, and subagent metadata; discard prompts, commands, and outputs. Keep credentials out of source, preserve existing hooks when merging, and restrict the unauthenticated server to trusted LANs.

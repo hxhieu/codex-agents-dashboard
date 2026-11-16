@@ -75,6 +75,28 @@ test("subagents join their parent card even when the parent reports later", () =
   assert.equal(groupAgents(agents, "test-pc")[0].children.length, 2);
 });
 
+test("parent cards sort by project name and retain their order through activity updates", () => {
+  let agents = [];
+  const update = (sessionId, cwd, extra = {}) => {
+    agents = applyEvent(agents, { ...base, eventName: "SessionStart", sessionId, cwd, ...extra });
+  };
+  update("zulu", "P:\\Zulu");
+  update("alpha-b", "P:\\Alpha\\", { machine: "b-pc" });
+  update("ten", "/work/project10");
+  update("two", "/work/project2/");
+  update("alpha-a2", "/work/alpha", { machine: "a-pc" });
+  update("alpha-a1", "/work/alpha", { machine: "a-pc" });
+  const order = () => groupAgents(agents).map((node) => node.sessionId);
+  const expected = ["alpha-a1", "alpha-a2", "alpha-b", "two", "ten", "zulu"];
+  assert.deepEqual(order(), expected);
+  update("zulu", "P:\\Zulu", { eventName: "PreToolUse", toolName: "Bash", toolUseId: "latest", receivedAt: "2099-01-01T00:00:00Z" });
+  update("zulu", "P:\\Zulu", { eventName: "SubagentStart", agentId: "busy-child", receivedAt: "2099-01-02T00:00:00Z" });
+  assert.deepEqual(order(), expected);
+  assert.deepEqual(groupAgents([...agents].reverse()).map((node) => node.sessionId), expected);
+  update("unknown-parent", "", { eventName: "SubagentStart", agentId: "orphan" });
+  assert.deepEqual(order(), [...expected, "unknown-parent"]);
+});
+
 test("cyclic parent metadata keeps sessions visible instead of recursing", () => {
   let agents = applyEvent([], { ...base, eventName: "SessionStart" });
   agents = applyEvent(agents, { ...base, eventName: "SubagentStart", agentId: "child" });
@@ -142,7 +164,10 @@ test(
           signal: AbortSignal.timeout(1000),
         });
         if (response.ok) {
-          assert.match(await response.text(), /Agent activity/);
+          const html = await response.text();
+          assert.match(html, /Agent activity/);
+          assert.match(html, /aria-label="Dark mode"/);
+          assert.ok(html.indexOf('src="/theme.js"') < html.indexOf('<body'), 'Theme preference loads before the dashboard body.');
           ready = true;
           break;
         }
@@ -153,6 +178,9 @@ test(
       await delay(100);
     }
     assert.ok(ready, logs);
+    const themeScript = await fetch(`${origin}/theme.js`);
+    assert.equal(themeScript.status, 200);
+    assert.match(await themeScript.text(), /codex-dashboard-theme/);
     const post = (payload, headers = {}) =>
       fetch(`${origin}/api/events`, {
         method: "POST",

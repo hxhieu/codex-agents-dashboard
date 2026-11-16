@@ -62,12 +62,23 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
     const children = node.children.map(filter).filter((child): child is AgentNode => !!child);
     return children.length ? { ...node, children } : undefined;
   }
-  function latest(node: AgentNode): number {
-    return Math.max(node.agent ? Date.parse(node.agent.lastSeen) : 0, ...node.children.map(latest));
+  const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
+  function projectName(node: AgentNode): string {
+    return node.agent?.cwd.split(/[\\/]/).filter(Boolean).at(-1) ?? "";
+  }
+  function compareProjects(a: AgentNode, b: AgentNode): number {
+    const first = projectName(a);
+    const second = projectName(b);
+    // Unknown projects follow named projects; ties never depend on activity.
+    return Number(!first) - Number(!second)
+      || collator.compare(first, second)
+      || collator.compare(a.machine, b.machine)
+      || collator.compare(a.agent?.cwd ?? "", b.agent?.cwd ?? "")
+      || a.sessionId.localeCompare(b.sessionId);
   }
   return [...nodes.values()]
     .filter((node) => !attached.has(node.key))
-    .sort((a, b) => latest(b) - latest(a))
+    .sort(compareProjects)
     .map(filter)
     .filter((node): node is AgentNode => !!node);
 }
