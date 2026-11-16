@@ -53,6 +53,10 @@ export function normalizeEvent(
   if (!hookEvents.includes(eventName as HookEventName)) {
     throw new Error("Unsupported hook_event_name.");
   }
+  const agentId = field(input.agent_id);
+  if ((eventName === "SubagentStart" || eventName === "SubagentStop") && !agentId) {
+    throw new Error("agent_id is required for subagent lifecycle events.");
+  }
   return {
     id: crypto.randomUUID(),
     machine: machineName,
@@ -62,7 +66,7 @@ export function normalizeEvent(
     cwd: field(input.cwd, 2048) ?? "",
     toolName: field(input.tool_name),
     toolUseId: field(input.tool_use_id),
-    agentId: field(input.agent_id),
+    agentId,
     agentType: field(input.agent_type),
   };
 }

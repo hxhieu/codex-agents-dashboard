@@ -42,6 +42,7 @@ Only session and tool metadata is broadcast. Prompt text, command arguments, and
 - Open the dashboard before sending updates; previous activity is not loaded.
 - Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
 - Each tab shows up to 200 recent sessions, with parent cards sorted alphabetically by project name. Subagents appear inside their parent's card with their own status, activity, and last update. Use the **Subagents** heading to collapse or expand them.
+- A running subagent can appear on its next tool update even if you missed its start event. Subagents that produce no new events after a refresh cannot be recovered from history.
 - Cards show the latest reported activity. Silence does not mean a session is idle or offline.
 - After a connection gap, the dashboard reconnects automatically and keeps existing cards. Missed updates are not recovered.
 

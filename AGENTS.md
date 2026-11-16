@@ -37,7 +37,7 @@ Initial history contains only `init commit`; no convention is established. Use i
 
 - `POST /api/events` requires hook JSON and `X-Machine`; returns 204, 400 for invalid events, 413 above 1 MiB, or 415 for unsupported content types.
 - `GET /api/stream` sends live SSE without replay; 15-second keepalive comments indicate browser connectivity, not agent health.
-- Key sessions by machine/session ID; use agent ID for subagents and retain their parent. Track parallel tools by call ID.
+- Key sessions by machine/session ID; route every hook carrying a child `agent_id` to that subagent, retaining its parent session. Do not limit child routing to start/stop events. Track parallel tools by call ID.
 - Keep only live subscriber connections server-side; disconnect slow consumers. Browser state is capped at 200 sessions.
 - Example hooks forward stdin via curl, discard responses, ignore transport failures, and time out after one second. Background delivery can reorder events; `SessionEnd` is synchronous.
 

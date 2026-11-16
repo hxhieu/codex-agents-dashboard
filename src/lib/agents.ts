@@ -84,8 +84,9 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
 }
 
 export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
-  const isSubagent =
-    event.eventName === "SubagentStart" || event.eventName === "SubagentStop";
+  // Tool, prompt, and compaction hooks also carry the child identity. This
+  // recreates a child after refresh even when its start event was missed.
+  const isSubagent = !!event.agentId && event.agentId !== event.sessionId;
   const sessionId =
     isSubagent && event.agentId ? event.agentId : event.sessionId;
   const key = JSON.stringify([event.machine, sessionId]);
@@ -156,7 +157,7 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
     key,
     machine: event.machine,
     sessionId,
-    parentSessionId: isSubagent ? event.sessionId : previous?.parentSessionId,
+    parentSessionId: previous?.parentSessionId ?? (isSubagent ? event.sessionId : undefined),
     agentType: event.agentType ?? previous?.agentType,
     cwd: event.cwd || previous?.cwd || "",
     status,

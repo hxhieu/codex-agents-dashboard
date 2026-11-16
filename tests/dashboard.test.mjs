@@ -5,6 +5,7 @@ import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
 import { applyEvent, groupAgents } from "../src/lib/agents.ts";
+import { normalizeEvent } from "../src/lib/events.ts";
 
 const base = {
   machine: "test-pc",
@@ -73,6 +74,37 @@ test("subagents join their parent card even when the parent reports later", () =
   assert.equal(filtered[0].children[0].children.length, 1);
   assert.equal(groupAgents(agents, "nonexistent").length, 0);
   assert.equal(groupAgents(agents, "test-pc")[0].children.length, 2);
+});
+
+test("ordinary subagent hooks recreate child rows after refresh without overwriting the parent", () => {
+  const parent = { session_id: "root", cwd: "P:/project" };
+  const child = { ...parent, agent_id: "child", agent_type: "worker" };
+  const event = (input) => normalizeEvent(input, "test-pc");
+  // The browser opened after SubagentStart, so its first event is a tool update.
+  let agents = applyEvent([], event({ ...child, hook_event_name: "PreToolUse", tool_name: "Bash", tool_use_id: "child-tool" }));
+  let family = groupAgents(agents)[0];
+  assert.equal(family.sessionId, "root");
+  assert.equal(family.agent, undefined);
+  assert.equal(family.children[0].sessionId, "child");
+  assert.equal(family.children[0].agent.status, "Using tools");
+  agents = applyEvent(agents, event({ ...parent, hook_event_name: "PreToolUse", tool_name: "apply_patch", tool_use_id: "parent-tool" }));
+  agents = applyEvent(agents, event({ ...child, hook_event_name: "PostToolUse", tool_name: "Bash", tool_use_id: "child-tool" }));
+  agents = applyEvent(agents, event({ ...child, hook_event_name: "PermissionRequest", tool_name: "Bash" }));
+  family = groupAgents(agents)[0];
+  assert.equal(family.agent.status, "Using tools");
+  assert.deepEqual(family.agent.tools, { "parent-tool": "apply_patch" });
+  assert.equal(family.children.length, 1);
+  assert.equal(family.children[0].agent.status, "Approval requested");
+  agents = applyEvent(agents, event({ ...child, hook_event_name: "SubagentStop" }));
+  family = groupAgents(agents)[0];
+  assert.equal(family.children[0].agent.status, "Subagent stopped");
+  assert.equal(family.agent.status, "Using tools");
+});
+
+test("subagent lifecycle events require a child ID instead of updating the parent", () => {
+  for (const hook_event_name of ["SubagentStart", "SubagentStop"]) {
+    assert.throws(() => normalizeEvent({ session_id: "parent", hook_event_name }, "test-pc"), /agent_id is required/);
+  }
 });
 
 test("parent cards sort by project name and retain their order through activity updates", () => {
@@ -239,6 +271,17 @@ test(
       JSON.stringify(messages),
       /private-command-marker|private-result-marker|tool_input|tool_response/,
     );
+    const childPending = Promise.all([receive(first), receive(second)]);
+    assert.equal((await post({
+      ...incoming, agent_id: "live-child", agent_type: "worker", tool_use_id: "child-call",
+    })).status, 204);
+    const childMessages = await childPending;
+    assert.deepEqual(childMessages[0], childMessages[1]);
+    const family = groupAgents(applyEvent(applyEvent([], messages[0]), childMessages[0]))[0];
+    assert.equal(family.agent.sessionId, "live-session");
+    assert.deepEqual(Object.keys(family.agent.tools), ["call-1"]);
+    assert.equal(family.children[0].sessionId, "live-child");
+    assert.deepEqual(Object.keys(family.children[0].agent.tools), ["child-call"]);
     assert.equal((await post("{broken")).status, 400);
     assert.equal(
       (await post({ ...event, hook_event_name: "unsupported" })).status,
