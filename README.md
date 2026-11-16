@@ -1,6 +1,6 @@
 # Codex Agents Dashboard
 
-A live dashboard for Codex CLI sessions across your local network. See each session's machine, project, latest reported activity, and last update. No database or collector is needed, and activity is not saved.
+A live dashboard for Codex CLI and Claude Code sessions across your local network. See each session's harness, machine, project, latest reported activity, and last update. No database or collector is needed, and activity is not saved.
 
 ## Run
 
@@ -36,7 +36,15 @@ Startup reporting runs only for fresh sessions. Resumed sessions appear on their
 
 Only session and tool metadata is broadcast. Prompt text, command arguments, and tool output are discarded.
 
-Codex is currently the only supported harness. Older hooks without `X-Harness` still work as Codex; unsupported harness values return HTTP 400. Cards display the harness name alongside the machine.
+## Connect Claude Code hooks
+
+1. Use `hooks/claude-code.json`. Replace `192.168.0.177:4321` if your dashboard address differs. It sends `X-Harness: claude-code` and identifies the sending computer by hostname.
+2. Merge its `hooks` entries into `~/.claude/settings.json` for all projects, or `.claude/settings.json` for one project. Preserve existing settings and handlers; install the reporters in only one location. The file in this repository is a configuration source and is not loaded automatically.
+3. These command hooks use Bash and curl. On Windows, install Git Bash. Check the reporters in Claude Code's `/hooks` menu and restart the session after updating settings.
+
+Claude reporting includes session start/resume/end, prompts, tools, approvals, subagents, and compaction. `AskUserQuestion` shows as awaiting an answer; failed or denied tools clear their active call, and a turn ending in an API error shows as interrupted. Commands discard responses, ignore transport failures, and stop networking after one second. Session-end reporting is synchronous; background delivery can reorder other updates.
+
+Supported harness headers are `codex` and `claude-code`. Older hooks without `X-Harness` still work as Codex; unsupported values return HTTP 400. Cards display the harness name alongside the machine.
 
 ## What to expect
 

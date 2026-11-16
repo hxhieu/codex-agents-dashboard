@@ -142,7 +142,8 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   if (
     ["PreToolUse", "PostToolUse"].includes(event.eventName) &&
     Object.values(tools).some((name) =>
-      /(?:^|[._])request_user_input(?:_async)?$/.test(name),
+      /(?:^|[._])request_user_input(?:_async)?$/.test(name)
+      || (event.harness === "claude-code" && name === "AskUserQuestion"),
     )
   ) {
     status = "Awaiting answer";

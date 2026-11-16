@@ -287,13 +287,20 @@ test(
     assert.deepEqual(Object.keys(family.agent.tools), ["call-1"]);
     assert.equal(family.children[0].sessionId, "live-child");
     assert.deepEqual(Object.keys(family.children[0].agent.tools), ["child-call"]);
+    const claudePending = Promise.all([receive(first), receive(second)]);
+    assert.equal((await post({ ...incoming, tool_name: "AskUserQuestion" }, { "X-Harness": "claude-code" })).status, 204);
+    const claudeMessages = await claudePending;
+    assert.deepEqual(claudeMessages[0], claudeMessages[1]);
+    assert.equal(claudeMessages[0].harness, "claude-code");
+    assert.equal(claudeMessages[0].harnessLabel, "Claude Code");
+    assert.equal(applyEvent([], claudeMessages[0])[0].status, "Awaiting answer");
     assert.equal((await post("{broken")).status, 400);
     assert.equal(
       (await post({ ...event, hook_event_name: "unsupported" })).status,
       400,
     );
     assert.equal((await post(event, { "X-Machine": "" })).status, 400);
-    for (const harness of ["claude-code", "unknown", "", "constructor", "__proto__"]) {
+    for (const harness of ["unknown", "", "constructor", "__proto__"]) {
       assert.equal((await post(event, { "X-Harness": harness })).status, 400);
     }
     assert.equal(

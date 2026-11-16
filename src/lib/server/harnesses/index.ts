@@ -1,5 +1,6 @@
 import type { AgentEvent, HookMetadata } from "../../events";
 import { normalizeCodexEvent } from "./codex.ts";
+import { normalizeClaudeCodeEvent } from "./claude-code.ts";
 
 interface HarnessMapping {
   label: string;
@@ -9,6 +10,7 @@ interface HarnessMapping {
 // Register each supported harness explicitly; never infer it from payload content.
 const harnessMappings: Readonly<Record<string, HarnessMapping>> = {
   codex: { label: "Codex", normalize: normalizeCodexEvent },
+  "claude-code": { label: "Claude Code", normalize: normalizeClaudeCodeEvent },
 };
 
 export function normalizeEvent(

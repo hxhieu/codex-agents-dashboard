@@ -1,0 +1,186 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": false
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

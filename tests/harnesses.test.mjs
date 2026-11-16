@@ -29,7 +29,7 @@ test("the registered Codex mapping preserves supported metadata and discards pay
 
 test("old hooks default to Codex while unregistered harnesses and events are rejected", () => {
   assert.equal(normalizeEvent(payload, "test-pc").harness, "codex");
-  for (const harness of ["", " ", "unknown", "claude-code", "constructor", "__proto__"]) {
+  for (const harness of ["", " ", "unknown", "constructor", "__proto__"]) {
     assert.throws(() => normalizeEvent(payload, "test-pc", harness), /Unsupported X-Harness/);
   }
   for (const eventName of ["unsupported", "constructor", "__proto__"]) {

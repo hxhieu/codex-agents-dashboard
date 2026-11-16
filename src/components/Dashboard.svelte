@@ -89,7 +89,7 @@
 
     <details id="connect" class="setup">
       <summary><span><span class="setup-icon" aria-hidden="true">↗</span> Connect your Codex agents</span><span class="setup-hint">DIRECT HOOKS · NO COLLECTOR</span></summary>
-      <div class="setup-body"><p>Use <code>hooks/codex.json</code> to connect Codex CLI, or adapt <code>examples/hooks.json</code>. Set the dashboard address and a unique machine name for each computer.</p><pre><code>curl --max-time 1 -H "Content-Type: application/json" -H "X-Machine: my-pc" -H "X-Harness: codex" --data-binary @- {endpoint}</code></pre><p class="muted">A refreshed page starts empty. Silence means no recent update; it does not indicate that an agent is offline.</p></div>
+      <div class="setup-body"><p>Use <code>hooks/codex.json</code> for Codex CLI or <code>hooks/claude-code.json</code> for Claude Code. Set the dashboard address before merging the hooks into your CLI settings.</p><pre><code>curl --max-time 1 -H "Content-Type: application/json" -H "X-Machine: my-pc" -H "X-Harness: codex" --data-binary @- {endpoint}</code></pre><p class="muted">A refreshed page starts empty. Silence means no recent update; it does not indicate that an agent is offline.</p></div>
     </details>
     <footer class="page-footer"><span><span class="footer-dot"></span> A window into the work.</span><span>NO HISTORY. JUST NOW.</span></footer>
   </main>
