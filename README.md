@@ -39,9 +39,10 @@ Only session and tool metadata is broadcast. Prompt text, command arguments, and
 ## What to expect
 
 - Use the theme toggle in the header to switch between light and dark mode. Your choice is remembered in this browser across refreshes; your system theme is used until you choose one.
+- The browser tab shows an amber pip and a waiting count when sessions or subagents are awaiting a prompt, answer, or approval. The indicator includes sessions hidden by the search filter and clears when none are waiting or you clear the view.
 - Open the dashboard before sending updates; previous activity is not loaded.
 - Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
-- Each tab shows up to 200 recent sessions, with parent cards sorted alphabetically by project name. Subagents appear inside their parent's card with their own status, activity, and last update. Use the **Subagents** heading to collapse or expand them.
+- Each tab shows up to 200 recent sessions, with parent cards sorted alphabetically by project name. Subagents appear inside their parent's card with their own status, activity, and last update. Select each subagent's header to expand or collapse its details; its status stays visible.
 - A running subagent can appear on its next tool update even if you missed its start event. Subagents that produce no new events after a refresh cannot be recovered from history.
 - Cards show the latest reported activity. Silence does not mean a session is idle or offline.
 - After a connection gap, the dashboard reconnects automatically and keeps existing cards. Missed updates are not recovered.

@@ -19,19 +19,21 @@
 
 {#snippet subagentRow(child: AgentNode)}
   <li>
-    <div class="child-heading">
-      <div class="child-name"><span class="branch" aria-hidden="true">↳</span><strong>{child.agent?.agentType || 'Subagent'}</strong><code title={child.sessionId}>{child.sessionId.slice(0, 8)}</code></div>
-      {#if child.agent}<StatusBadge status={child.agent.status} />{/if}
-    </div>
-    {#if child.agent}
-      <p class="child-activity">{Object.values(child.agent.tools).join(' · ') || child.agent.latestEvent}</p>
-      <div class="child-meta"><span title={child.agent.cwd}>{child.agent.cwd ? project(child.agent.cwd) : 'Project not reported'}</span><time datetime={child.agent.lastSeen} title={new Date(child.agent.lastSeen).toLocaleString()}>Updated {age(child.agent.lastSeen)}</time></div>
-    {:else}
-      <p class="child-activity">Waiting for this subagent's next update</p>
-    {/if}
-    {#if child.children.length}
-      <ul class="nested">{#each child.children as descendant (descendant.key)}{@render subagentRow(descendant)}{/each}</ul>
-    {/if}
+    <details open>
+      <summary>
+        <span class="child-name"><span class="chevron" aria-hidden="true">›</span><strong>{child.agent?.agentType || 'Subagent'}</strong><code title={child.sessionId}>{child.sessionId.slice(0, 8)}</code></span>
+        {#if child.agent}<StatusBadge status={child.agent.status} />{/if}
+      </summary>
+      {#if child.agent}
+        <p class="child-activity">{Object.values(child.agent.tools).join(' · ') || child.agent.latestEvent}</p>
+        <div class="child-meta"><span title={child.agent.cwd}>{child.agent.cwd ? project(child.agent.cwd) : 'Project not reported'}</span><time datetime={child.agent.lastSeen} title={new Date(child.agent.lastSeen).toLocaleString()}>Updated {age(child.agent.lastSeen)}</time></div>
+      {:else}
+        <p class="child-activity">Waiting for this subagent's next update</p>
+      {/if}
+      {#if child.children.length}
+        <ul class="nested">{#each child.children as descendant (descendant.key)}{@render subagentRow(descendant)}{/each}</ul>
+      {/if}
+    </details>
   </li>
 {/snippet}
 
@@ -47,10 +49,10 @@
   {/if}
   <footer><code title={node.sessionId}>{node.sessionId.slice(0, 12)}</code>{#if agent}<time datetime={agent.lastSeen} title={new Date(agent.lastSeen).toLocaleString()}>Updated {age(agent.lastSeen)}</time>{/if}</footer>
   {#if node.children.length}
-    <details class="subagents" open>
-      <summary>Subagents <span>{node.children.length}</span></summary>
+    <section class="subagents" aria-label="Subagents">
+      <h3>Subagents</h3>
       <ul>{#each node.children as child (child.key)}{@render subagentRow(child)}{/each}</ul>
-    </details>
+    </section>
   {/if}
 </article>
 
@@ -68,14 +70,16 @@
   footer { display: flex; justify-content: space-between; font-size: 10px; color: var(--faint); gap: 10px; }
   footer code { color: var(--faint); }
   .subagents { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 12px; }
-  summary { font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; }
-  summary span { margin-left: 5px; font-size: 10px; color: var(--faint); }
+  h3 { margin: 0; font-size: 11px; font-weight: 600; color: var(--muted); }
+  summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; list-style: none; font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 3px; }
+  .chevron { display: inline-block; font-size: 18px; line-height: 1; color: var(--faint); }
+  details[open] > summary > .child-name > .chevron { transform: rotate(90deg); }
   ul { list-style: none; padding: 0; margin: 4px 0 0; }
   li { padding: 13px 0 0; }
   li + li { margin-top: 11px; border-top: 1px solid var(--divider); }
-  .child-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .child-name { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 11px; }
-  .branch { color: var(--faint); }
   strong { font-weight: 550; overflow-wrap: anywhere; }
   .child-name code { font-size: 9px; color: var(--faint); }
   .child-activity { margin: 7px 0 6px 18px; font: 11px/1.5 Consolas, monospace; overflow-wrap: anywhere; color: var(--muted); }

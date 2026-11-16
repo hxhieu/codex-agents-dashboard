@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { applyEvent, groupAgents, type Agent } from '../lib/agents';
+  import { updateTabAttention } from '../lib/attention';
   import type { AgentEvent } from '../lib/events';
   import AgentCard from './AgentCard.svelte';
   import ThemeToggle from './ThemeToggle.svelte';
@@ -15,6 +16,8 @@
   const visible = $derived(groupAgents(agents, query));
   const subagentCount = $derived(agents.filter((agent) => agent.parentSessionId).length);
   const machineCount = $derived(new Set(agents.map((agent) => agent.machine)).size);
+
+  $effect(() => { updateTabAttention(agents); });
 
   function age(timestamp: string): string {
     const seconds = Math.max(0, Math.floor((now - Date.parse(timestamp)) / 1000));
@@ -39,7 +42,7 @@
       now = Date.now();
     });
     const clock = setInterval(() => { now = Date.now(); }, 1000);
-    return () => { stream.close(); clearInterval(clock); };
+    return () => { stream.close(); clearInterval(clock); updateTabAttention([]); };
   });
 </script>
 

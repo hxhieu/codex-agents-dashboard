@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { needsAttention } from '../lib/attention';
   let { status }: { status: string } = $props();
-  const waiting = $derived(['Awaiting prompt', 'Awaiting answer', 'Approval requested'].includes(status));
+  const waiting = $derived(needsAttention(status));
 </script>
 
 <span class="status" class:waiting class:attention={status === 'Approval requested'}>{status}</span>
