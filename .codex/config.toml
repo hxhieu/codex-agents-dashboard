@@ -1,0 +1,24 @@
+[mcp_servers."neural-memory"]
+command = "nmem-mcp"
+args = []
+
+[mcp_servers."neural-memory".env]
+NMEM_BRAIN = "codex-agents-dashboard"
+
+[mcp_servers.cocoindex-code]
+startup_timeout_sec = 120
+command = "ccc"
+args = ["mcp"]
+
+[mcp_servers.serena]
+startup_timeout_sec = 150
+command = "serena"
+args = [
+  "start-mcp-server",
+  "--context=codex",
+  "--project-from-cwd",
+  "--mode", "no-memories",
+  "--mode", "no-onboarding",
+  "--mode", "query-projects",
+  "--mode", "planning"
+]

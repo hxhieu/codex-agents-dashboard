@@ -1,0 +1,161 @@
+{
+  "description": "Live dashboard reporting. Replace DASHBOARD_HOST and my-pc before merging into your existing hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Interrupt": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": false
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "timeout": 2,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

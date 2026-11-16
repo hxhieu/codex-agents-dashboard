@@ -1,0 +1,16 @@
+_working
+.venv/
+__pycache__/
+*.pyc
+.neuralmemory
+.codebase-memory
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+/.ruff_cache
+/review/screenshots/
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,19 @@
+{
+    "hooks": {
+        "SessionStart": [
+            {
+                "matcher": "startup|resume|clear|compact",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "echo 'Persistent project ledger: use nmem proactively. At session start, resume, clear, or compaction, call nmem_recap and then nmem_recall for `codex-agents-dashboard` current context, decisions, workflows, errors, and handoff before continuing work. Save material decisions, fixes, workflows, instructions, and preferences with concise nmem_remember entries; mark temporary debugging notes ephemeral. Use nmem_auto process with a brief summary at session end. Never store secrets in nmem, and keep transient ledger state out of AGENTS.md and project documentation.'"
+                    },
+                    {
+                        "type": "command",
+                        "command": "echo 'Code Hunting: use `serena` MCP for compiler grade symbol lookups and use `cocoindex-code` MCP for semantic search if you do not know the exact code. If `cocoindex-code` throws model not loaded then use `lms load` to load it with `text-embedding-embeddinggemma-300m`, otherwise stop and tell the user if those code index MCPs unavailable.'"
+                    }
+                ]
+            }
+        ]
+    }
+}
