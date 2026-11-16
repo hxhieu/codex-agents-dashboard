@@ -4,7 +4,7 @@ import { once } from "node:events";
 import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
-import { applyEvent } from "../src/lib/agents.ts";
+import { applyEvent, groupAgents } from "../src/lib/agents.ts";
 
 const base = {
   machine: "test-pc",
@@ -35,6 +35,74 @@ test("parallel tools stay active until all finish; lifecycle and subagent identi
   assert.equal(agents[0].status, "Subagent stopped");
   update("SessionStart", { machine: "other-pc" });
   assert.equal(agents.length, 3);
+});
+
+test("subagents join their parent card even when the parent reports later", () => {
+  let agents = applyEvent([], {
+    ...base, eventName: "SubagentStart", agentId: "child-a", agentType: "researcher",
+  });
+  let families = groupAgents(agents);
+  assert.equal(families.length, 1);
+  assert.equal(families[0].sessionId, "session-1");
+  assert.equal(families[0].agent, undefined);
+  assert.equal(families[0].children[0].agent.agentType, "researcher");
+  agents = applyEvent(agents, { ...base, eventName: "SessionStart" });
+  agents = applyEvent(agents, {
+    ...base, eventName: "SubagentStart", agentId: "child-b", agentType: "reviewer",
+  });
+  agents = applyEvent(agents, {
+    ...base, eventName: "SubagentStart", sessionId: "child-a", agentId: "grandchild", agentType: "reader",
+  });
+  agents = applyEvent(agents, {
+    ...base, eventName: "PreToolUse", sessionId: "child-a", toolName: "Bash", toolUseId: "child-tool",
+  });
+  agents = applyEvent(agents, { ...base, eventName: "SessionStart", machine: "another-pc" });
+  families = groupAgents(agents);
+  assert.equal(families.length, 2);
+  const parent = families.find((node) => node.machine === "test-pc");
+  assert.equal(parent.agent.sessionId, "session-1");
+  assert.equal(parent.children.length, 2);
+  const child = parent.children.find((node) => node.sessionId === "child-a");
+  assert.equal(child.agent.status, "Using tools");
+  assert.equal(child.children[0].sessionId, "grandchild");
+  assert.equal(families.find((node) => node.machine === "another-pc").children.length, 0);
+  const filtered = groupAgents(agents, "researcher");
+  assert.equal(filtered.length, 1);
+  assert.equal(filtered[0].sessionId, "session-1");
+  assert.equal(filtered[0].children.length, 1);
+  assert.equal(filtered[0].children[0].children.length, 1);
+  assert.equal(groupAgents(agents, "nonexistent").length, 0);
+  assert.equal(groupAgents(agents, "test-pc")[0].children.length, 2);
+});
+
+test("cyclic parent metadata keeps sessions visible instead of recursing", () => {
+  let agents = applyEvent([], { ...base, eventName: "SessionStart" });
+  agents = applyEvent(agents, { ...base, eventName: "SubagentStart", agentId: "child" });
+  agents = agents.map((agent) => agent.sessionId === "session-1" ? { ...agent, parentSessionId: "child" } : agent);
+  const families = groupAgents(agents);
+  assert.equal(families.length, 2);
+  assert.ok(families.every((node) => node.children.length === 0));
+});
+
+test("user questions remain pending through unrelated tool updates and clear when answered", () => {
+  for (const toolName of ["request_user_input", "functions.request_user_input_async"]) {
+    let agents = [];
+    const update = (eventName, extra = {}) => {
+      agents = applyEvent(agents, { ...base, eventName, ...extra });
+    };
+    update("PreToolUse", { toolName, toolUseId: "question" });
+    assert.equal(agents[0].status, "Awaiting answer");
+    update("PreToolUse", { toolName: "Bash", toolUseId: "other" });
+    assert.equal(agents[0].status, "Awaiting answer");
+    update("PostToolUse", { toolName: "Bash", toolUseId: "other" });
+    assert.equal(agents[0].status, "Awaiting answer");
+    update("PostToolUse", { toolName, toolUseId: "question" });
+    assert.equal(agents[0].status, "Working");
+    update("PermissionRequest", { toolName: "Bash" });
+    assert.equal(agents[0].status, "Approval requested");
+    update("Stop");
+    assert.equal(agents[0].status, "Awaiting prompt");
+  }
 });
 
 test(
@@ -74,7 +142,7 @@ test(
           signal: AbortSignal.timeout(1000),
         });
         if (response.ok) {
-          assert.match(await response.text(), /Your agents, in view/);
+          assert.match(await response.text(), /Agent activity/);
           ready = true;
           break;
         }

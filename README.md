@@ -26,11 +26,13 @@ An empty HTTP 204 response means the event was accepted. An agent card should ap
 
 ## Connect Codex CLI hooks
 
-1. Adapt `examples/hooks.json`: replace `DASHBOARD_HOST` with this machine's LAN IP or hostname and `my-pc` with a unique name for the sending machine. Use the same machine name for every hook on that computer.
-2. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works.
+1. Use the root `hooks.json` if its dashboard address matches your server; it identifies each sending computer by hostname automatically. Alternatively, adapt `examples/hooks.json`: replace `DASHBOARD_HOST` with the dashboard machine's LAN IP or hostname and `my-pc` with a unique name for the sending machine.
+2. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works; install these reporting hooks in only one location to avoid duplicate updates. The root `hooks.json` is a configuration source, not an automatically loaded file.
 3. Review and trust the added hooks using `/hooks` in Codex CLI. Restart the CLI if necessary for configuration changes to load.
 
 The example includes Windows and POSIX commands. Reporting uses a one-second network timeout and does not retry failed updates. Background updates can arrive out of order.
+
+Startup reporting runs only for fresh sessions. Resumed sessions appear on their next prompt or tool update; reporting is skipped during resume to avoid the observed CLI startup failure. After updating installed hooks, review changed handlers again using `/hooks`.
 
 Only session and tool metadata is broadcast. Prompt text, command arguments, and tool output are discarded.
 
@@ -38,7 +40,7 @@ Only session and tool metadata is broadcast. Prompt text, command arguments, and
 
 - Open the dashboard before sending updates; previous activity is not loaded.
 - Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
-- Each tab shows up to 200 recent sessions. Subagents are labeled with their parent session.
+- Each tab shows up to 200 recent sessions. Subagents appear inside their parent's card with their own status, activity, and last update. Use the **Subagents** heading to collapse or expand them.
 - Cards show the latest reported activity. Silence does not mean a session is idle or offline.
 - After a connection gap, the dashboard reconnects automatically and keeps existing cards. Missed updates are not recovered.
 

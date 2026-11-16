@@ -14,6 +14,64 @@ export interface Agent {
   updates: number;
 }
 
+export interface AgentNode {
+  key: string;
+  machine: string;
+  sessionId: string;
+  agent?: Agent;
+  children: AgentNode[];
+}
+
+/** Rebuild families from the current tab's events, including parents not yet seen. */
+export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
+  const nodes = new Map<string, AgentNode>();
+  function nodeFor(machine: string, sessionId: string): AgentNode {
+    const key = JSON.stringify([machine, sessionId]);
+    let node = nodes.get(key);
+    if (!node) {
+      node = { key, machine, sessionId, children: [] };
+      nodes.set(key, node);
+    }
+    return node;
+  }
+  for (const agent of agents) nodeFor(agent.machine, agent.sessionId).agent = agent;
+  const attached = new Set<string>();
+  for (const agent of agents) {
+    if (!agent.parentSessionId) continue;
+    const node = nodeFor(agent.machine, agent.sessionId);
+    const parent = nodeFor(agent.machine, agent.parentSessionId);
+    // Ignore cyclic relationships instead of losing cards or recursing forever.
+    const visited = new Set([node.key]);
+    let ancestor: AgentNode | undefined = parent;
+    let cyclic = false;
+    while (ancestor) {
+      if (visited.has(ancestor.key)) { cyclic = true; break; }
+      visited.add(ancestor.key);
+      ancestor = ancestor.agent?.parentSessionId
+        ? nodes.get(JSON.stringify([ancestor.machine, ancestor.agent.parentSessionId]))
+        : undefined;
+    }
+    if (cyclic) continue;
+    parent.children.push(node);
+    attached.add(node.key);
+  }
+  const search = query.trim().toLowerCase();
+  function filter(node: AgentNode): AgentNode | undefined {
+    const agent = node.agent;
+    if (!search || `${node.machine} ${node.sessionId} ${agent?.cwd ?? ""} ${agent?.agentType ?? ""}`.toLowerCase().includes(search)) return node;
+    const children = node.children.map(filter).filter((child): child is AgentNode => !!child);
+    return children.length ? { ...node, children } : undefined;
+  }
+  function latest(node: AgentNode): number {
+    return Math.max(node.agent ? Date.parse(node.agent.lastSeen) : 0, ...node.children.map(latest));
+  }
+  return [...nodes.values()]
+    .filter((node) => !attached.has(node.key))
+    .sort((a, b) => latest(b) - latest(a))
+    .map(filter)
+    .filter((node): node is AgentNode => !!node);
+}
+
 export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   const isSubagent =
     event.eventName === "SubagentStart" || event.eventName === "SubagentStop";
@@ -63,6 +121,14 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
     case "PostCompact":
       status = "Working";
       break;
+  }
+  if (
+    ["PreToolUse", "PostToolUse"].includes(event.eventName) &&
+    Object.values(tools).some((name) =>
+      /(?:^|[._])request_user_input(?:_async)?$/.test(name),
+    )
+  ) {
+    status = "Awaiting answer";
   }
   if (
     [

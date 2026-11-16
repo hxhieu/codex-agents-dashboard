@@ -5,6 +5,7 @@ Keep `README.md` focused on user setup and operation. Put implementation, contri
 ## Project Structure & Module Organization
 
 - `src/pages/index.astro` hosts `src/components/Dashboard.svelte` (Svelte 5).
+- `AgentCard.svelte` renders parent cards and nested subagents; `StatusBadge.svelte` shares status styling and attention pulses. `groupAgents` in `src/lib/agents.ts` builds machine-scoped trees, retaining missing parents and filtered descendants.
 - `src/pages/api/` contains HTTP endpoints; `src/lib/` holds event validation and browser state; `src/lib/server/broadcast.ts` manages SSE subscribers.
 - `tests/` contains behavioral tests, `public/` static assets, and `examples/` sample events/hooks.
 - Do not hand-edit generated `dist/`, `.astro/`, or `node_modules/`.
