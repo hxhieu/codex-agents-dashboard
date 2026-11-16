@@ -1,10 +1,10 @@
 # Codex Agents Dashboard
 
-A live LAN dashboard built with Astro, Svelte 5, and the standalone Node adapter. Codex hooks POST directly to the server; Server-Sent Events update connected browsers. No database, collector, event history, cookies, or browser storage. Astro session storage is disabled.
+A live dashboard for Codex CLI sessions across your local network. See each session's machine, project, latest reported activity, and last update. No database or collector is needed, and activity is not saved.
 
 ## Run
 
-Use the existing nvm-windows installation and pnpm:
+Use Node **24.13.0** through nvm-windows and **pnpm 10.21.0**:
 
 ```powershell
 nvm use 24.13.0
@@ -12,7 +12,7 @@ pnpm install
 pnpm dev
 ```
 
-Open **http://localhost:4321**. The development server listens on all interfaces so other LAN machines can post to `http://<this-machine-ip>:4321/api/events`. Windows Firewall must allow the chosen port for LAN access. This scaffold is intended for a trusted private LAN and does not add authentication.
+Open **http://localhost:4321**. Other LAN machines can send updates to `http://<this-machine-ip>:4321/api/events`. Windows Firewall must allow port 4321 for LAN access. Use this dashboard only on a trusted private LAN; it has no authentication.
 
 ## Try an update
 
@@ -30,36 +30,27 @@ An empty HTTP 204 response means the event was accepted. An agent card should ap
 2. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works.
 3. Review and trust the added hooks using `/hooks` in Codex CLI. Restart the CLI if necessary for configuration changes to load.
 
-The example provides both POSIX and Windows command variants. Each invocation forwards the JSON supplied on stdin directly through curl, discards the response body, caps network time at one second, and ignores transport failure. It uses background hooks except `SessionEnd` (which Codex runs synchronously). It has no retry queue. Background updates can arrive out of order; this is a view of the latest observed events, not a reliable audit log.
+The example includes Windows and POSIX commands. Reporting uses a one-second network timeout and does not retry failed updates. Background updates can arrive out of order.
 
-Only whitelisted metadata is broadcast: machine, session, event, working directory, tool name/call ID, and subagent identity. Prompt text, command arguments, and tool output are discarded. The request body limit is 1 MiB; larger hook payloads are dropped with HTTP 413.
+Only session and tool metadata is broadcast. Prompt text, command arguments, and tool output are discarded.
 
-## Behavior
+## What to expect
 
-- `POST /api/events`: receives hook JSON with an `X-Machine` header; returns 204, 400 for invalid events, 413 for oversized bodies, or 415 for an unsupported content type.
-- `GET /api/stream`: live SSE stream, with no replay. A 15-second comment keeps the browser connection alive; this is not an agent heartbeat.
-- Sessions are keyed by machine and session ID. Subagent start/stop events use their agent ID and retain the parent session ID.
-- Cards display the latest observed activity and time since its arrival. Silence does not imply idle or offline. Parallel tool calls are tracked by call ID when provided.
-- All session state lives in the current browser tab (up to 200 recent sessions). Refresh and **Clear view** reset that tab. The server retains only live subscriber connections, drops updates without listeners, and disconnects slow consumers instead of growing a history buffer.
-- After a connection gap, the browser reconnects automatically and keeps its existing cards; missed updates are not recovered.
-- Run a single server process. Multiple independent processes would have separate subscriber sets.
+- Open the dashboard before sending updates; previous activity is not loaded.
+- Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
+- Each tab shows up to 200 recent sessions. Subagents are labeled with their parent session.
+- Cards show the latest reported activity. Silence does not mean a session is idle or offline.
+- After a connection gap, the dashboard reconnects automatically and keeps existing cards. Missed updates are not recovered.
 
-## Check and build
+## Run a production build
+
+Build the dashboard and start it on your LAN:
 
 ```powershell
-pnpm check
 pnpm build
-pnpm test
-```
-
-Tests exercise the built Node server, including live fanout, validation, metadata filtering, and no replay, plus concurrent tool and subagent state transitions. Build before running them.
-
-Run the production build on the LAN:
-
-```powershell
 $env:HOST = "0.0.0.0"
 $env:PORT = "4321"
 pnpm start
 ```
 
-`src/pages/api/` contains the two HTTP endpoints, `src/lib/server/broadcast.ts` handles live fanout, and `src/components/Dashboard.svelte` renders the dashboard. `.nvmrc` records Node 24.13.0; nvm-windows still requires explicit `nvm use`.
+Run one server instance for all connected dashboards.
