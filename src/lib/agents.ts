@@ -2,6 +2,8 @@ import type { AgentEvent } from "./events";
 
 export interface Agent {
   key: string;
+  harness: string;
+  harnessLabel: string;
   machine: string;
   sessionId: string;
   parentSessionId?: string;
@@ -16,6 +18,8 @@ export interface Agent {
 
 export interface AgentNode {
   key: string;
+  harness: string;
+  harnessLabel: string;
   machine: string;
   sessionId: string;
   agent?: Agent;
@@ -25,21 +29,21 @@ export interface AgentNode {
 /** Rebuild families from the current tab's events, including parents not yet seen. */
 export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
   const nodes = new Map<string, AgentNode>();
-  function nodeFor(machine: string, sessionId: string): AgentNode {
-    const key = JSON.stringify([machine, sessionId]);
+  function nodeFor(harness: string, harnessLabel: string, machine: string, sessionId: string): AgentNode {
+    const key = JSON.stringify([harness, machine, sessionId]);
     let node = nodes.get(key);
     if (!node) {
-      node = { key, machine, sessionId, children: [] };
+      node = { key, harness, harnessLabel, machine, sessionId, children: [] };
       nodes.set(key, node);
     }
     return node;
   }
-  for (const agent of agents) nodeFor(agent.machine, agent.sessionId).agent = agent;
+  for (const agent of agents) nodeFor(agent.harness, agent.harnessLabel, agent.machine, agent.sessionId).agent = agent;
   const attached = new Set<string>();
   for (const agent of agents) {
     if (!agent.parentSessionId) continue;
-    const node = nodeFor(agent.machine, agent.sessionId);
-    const parent = nodeFor(agent.machine, agent.parentSessionId);
+    const node = nodeFor(agent.harness, agent.harnessLabel, agent.machine, agent.sessionId);
+    const parent = nodeFor(agent.harness, agent.harnessLabel, agent.machine, agent.parentSessionId);
     // Ignore cyclic relationships instead of losing cards or recursing forever.
     const visited = new Set([node.key]);
     let ancestor: AgentNode | undefined = parent;
@@ -48,7 +52,7 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
       if (visited.has(ancestor.key)) { cyclic = true; break; }
       visited.add(ancestor.key);
       ancestor = ancestor.agent?.parentSessionId
-        ? nodes.get(JSON.stringify([ancestor.machine, ancestor.agent.parentSessionId]))
+        ? nodes.get(JSON.stringify([ancestor.harness, ancestor.machine, ancestor.agent.parentSessionId]))
         : undefined;
     }
     if (cyclic) continue;
@@ -58,7 +62,7 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
   const search = query.trim().toLowerCase();
   function filter(node: AgentNode): AgentNode | undefined {
     const agent = node.agent;
-    if (!search || `${node.machine} ${node.sessionId} ${agent?.cwd ?? ""} ${agent?.agentType ?? ""}`.toLowerCase().includes(search)) return node;
+    if (!search || `${node.harness} ${node.harnessLabel} ${node.machine} ${node.sessionId} ${agent?.cwd ?? ""} ${agent?.agentType ?? ""}`.toLowerCase().includes(search)) return node;
     const children = node.children.map(filter).filter((child): child is AgentNode => !!child);
     return children.length ? { ...node, children } : undefined;
   }
@@ -74,6 +78,7 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
       || collator.compare(first, second)
       || collator.compare(a.machine, b.machine)
       || collator.compare(a.agent?.cwd ?? "", b.agent?.cwd ?? "")
+      || a.harness.localeCompare(b.harness)
       || a.sessionId.localeCompare(b.sessionId);
   }
   return [...nodes.values()]
@@ -89,7 +94,7 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   const isSubagent = !!event.agentId && event.agentId !== event.sessionId;
   const sessionId =
     isSubagent && event.agentId ? event.agentId : event.sessionId;
-  const key = JSON.stringify([event.machine, sessionId]);
+  const key = JSON.stringify([event.harness, event.machine, sessionId]);
   const previous = agents.find((agent) => agent.key === key);
   const tools = { ...previous?.tools };
   let status = "Working";
@@ -155,6 +160,8 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   }
   const next: Agent = {
     key,
+    harness: event.harness,
+    harnessLabel: event.harnessLabel,
     machine: event.machine,
     sessionId,
     parentSessionId: previous?.parentSessionId ?? (isSubagent ? event.sessionId : undefined),

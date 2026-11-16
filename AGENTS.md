@@ -7,6 +7,7 @@ Keep `README.md` focused on user setup and operation. Put implementation, contri
 - `src/pages/index.astro` hosts `src/components/Dashboard.svelte` (Svelte 5).
 - `AgentCard.svelte` renders parent cards and nested subagents; `StatusBadge.svelte` shares status styling and attention pulses. `groupAgents` in `src/lib/agents.ts` builds machine-scoped trees, retaining missing parents and filtered descendants.
 - `src/pages/api/` contains HTTP endpoints; `src/lib/` holds event validation and browser state; `src/lib/server/broadcast.ts` manages SSE subscribers.
+- `hooks/codex.json` is the ready-to-install Codex configuration. `src/lib/server/harnesses/index.ts` routes `X-Harness` to predefined adapters; `codex.ts` maps Codex event names and whitelists metadata into shared `AgentEvent` fields. Add future adapters here; never infer the harness from tool names or prompts.
 - `tests/` contains behavioral tests, `public/` static assets, and `examples/` sample events/hooks.
 - Do not hand-edit generated `dist/`, `.astro/`, or `node_modules/`.
 
@@ -35,12 +36,12 @@ Initial history contains only `init commit`; no convention is established. Use i
 
 ## Event Contract & Runtime Behavior
 
-- `POST /api/events` requires hook JSON and `X-Machine`; returns 204, 400 for invalid events, 413 above 1 MiB, or 415 for unsupported content types.
+- `POST /api/events` requires hook JSON and `X-Machine`; use `X-Harness: codex`. Missing harness headers default to Codex for existing installed hooks; empty/unknown values return 400. Other responses: 204 accepted, 400 invalid event, 413 above 1 MiB, 415 unsupported content type.
 - `GET /api/stream` sends live SSE without replay; 15-second keepalive comments indicate browser connectivity, not agent health.
-- Key sessions by machine/session ID; route every hook carrying a child `agent_id` to that subagent, retaining its parent session. Do not limit child routing to start/stop events. Track parallel tools by call ID.
+- Key sessions and parent relationships by harness/machine/session ID; route every hook carrying a child `agent_id` to that subagent, retaining its parent session. Do not limit child routing to start/stop events. Track parallel tools by call ID.
 - Keep only live subscriber connections server-side; disconnect slow consumers. Browser state is capped at 200 sessions.
-- Example hooks forward stdin via curl, discard responses, ignore transport failures, and time out after one second. Background delivery can reorder events; `SessionEnd` is synchronous.
+- Hook configurations send `X-Harness: codex`, forward stdin via curl, discard responses, ignore transport failures, and time out after one second. Preserve the `SessionStart` matcher `^startup$` to avoid the observed resume failure. Background delivery can reorder events; `SessionEnd` is synchronous.
 
 ## Architecture & Security
 
-Preserve direct hooks, one server process, browser-only agent state, and no agent-history persistence. The theme preference is the only value saved in localStorage. Apply it before rendering through `public/theme.js`; share palette variables in `src/styles/theme.css`. Keep Astro session storage disabled. Whitelist machine/session/event, directory, tool/call ID, and subagent metadata; discard prompts, commands, and outputs. Keep credentials out of source, preserve existing hooks when merging, and restrict the unauthenticated server to trusted LANs.
+Preserve direct hooks, one server process, browser-only agent state, and no agent-history persistence. The theme preference is the only value saved in localStorage. Apply it before rendering through `public/theme.js`; share palette variables in `src/styles/theme.css`. Keep Astro session storage disabled. Whitelist registered harness identity, machine/session/event, directory, tool/call ID, and subagent metadata; discard prompts, commands, and outputs. Keep credentials out of source, preserve existing hooks when merging, and restrict the unauthenticated server to trusted LANs.

@@ -5,9 +5,11 @@ import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
 import { applyEvent, groupAgents } from "../src/lib/agents.ts";
-import { normalizeEvent } from "../src/lib/events.ts";
+import { normalizeEvent } from "../src/lib/server/harnesses/index.ts";
 
 const base = {
+  harness: "codex",
+  harnessLabel: "Codex",
   machine: "test-pc",
   sessionId: "session-1",
   cwd: "P:/project",
@@ -219,6 +221,7 @@ test(
         headers: {
           "Content-Type": "application/json",
           "X-Machine": "test-pc",
+          "X-Harness": "codex",
           ...headers,
         },
         body: typeof payload === "string" ? payload : JSON.stringify(payload),
@@ -266,6 +269,8 @@ test(
     assert.deepEqual(messages[0], messages[1]);
     assert.equal(messages[0].sessionId, "live-session");
     assert.equal(messages[0].machine, "test-pc");
+    assert.equal(messages[0].harness, "codex");
+    assert.equal(messages[0].harnessLabel, "Codex");
     assert.equal(messages[0].toolUseId, "call-1");
     assert.doesNotMatch(
       JSON.stringify(messages),
@@ -288,6 +293,9 @@ test(
       400,
     );
     assert.equal((await post(event, { "X-Machine": "" })).status, 400);
+    for (const harness of ["claude-code", "unknown", "", "constructor", "__proto__"]) {
+      assert.equal((await post(event, { "X-Harness": harness })).status, 400);
+    }
     assert.equal(
       (await post(event, { "Content-Type": "text/plain" })).status,
       415,

@@ -7,8 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -33,8 +33,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -46,8 +46,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -59,8 +59,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -72,8 +72,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -85,8 +85,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -98,8 +98,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": false
           }
@@ -111,8 +111,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -124,8 +124,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -137,8 +137,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }
@@ -150,8 +150,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
-            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
+            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 -H 'Content-Type: application/json' -H 'X-Machine: my-pc' --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events || true",
+            "commandWindows": "cmd.exe /d /s /c \"curl.exe --silent --output NUL --connect-timeout 0.25 --max-time 1 -H \"Content-Type: application/json\" -H \"X-Machine: my-pc\" --header X-Harness:codex --data-binary @- http://DASHBOARD_HOST:4321/api/events & exit /b 0\"",
             "timeout": 2,
             "async": true
           }

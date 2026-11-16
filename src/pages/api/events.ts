@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { normalizeEvent } from "../../lib/events";
+import { normalizeEvent } from "../../lib/server/harnesses";
 import { broadcast } from "../../lib/server/broadcast";
 
 const MAX_BYTES = 1024 * 1024;
@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
       chunks.push(value);
     }
     const payload = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-    broadcast(normalizeEvent(payload, request.headers.get("x-machine")));
+    broadcast(normalizeEvent(payload, request.headers.get("x-machine"), request.headers.get("x-harness")));
     return new Response(null, { status: 204 });
   } catch (error) {
     return Response.json(

@@ -11,6 +11,7 @@ test("the tab flags waiting parents and subagents, then clears as work resumes o
   };
   const page = { title: "Codex / Agents", querySelector() { return icon; } };
   const base = {
+    harness: "codex", harnessLabel: "Codex",
     machine: "test-pc", sessionId: "parent", cwd: "P:/project",
     receivedAt: new Date().toISOString(), id: "test",
   };

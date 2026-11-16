@@ -39,7 +39,7 @@
 
 <article class="card">
   <header class="card-top">
-    <span class="machine"><span aria-hidden="true">▣</span> {node.machine}</span>
+    <span class="machine"><span aria-hidden="true">▣</span> {node.machine}<span class="harness">{node.harnessLabel}</span></span>
     {#if agent}<StatusBadge status={agent.status} />{:else}<span class="unobserved">Parent not observed yet</span>{/if}
   </header>
   <h2>{agent ? project(agent.cwd) : 'Parent session'}</h2>
@@ -61,6 +61,7 @@
   .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 25px; }
   .machine { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
   .machine > span { margin-right: 4px; color: var(--faint); }
+  .machine > .harness { margin: 0 0 0 7px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 4px; font-size: 9px; white-space: nowrap; }
   .unobserved { font-size: 10px; color: var(--faint); }
   h2 { font-size: 21px; letter-spacing: -.5px; font-weight: 550; overflow-wrap: anywhere; margin: 16px 0 5px; }
   .path { font: 10px/1.6 Consolas, monospace; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
