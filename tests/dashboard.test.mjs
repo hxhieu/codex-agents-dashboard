@@ -270,6 +270,8 @@ test(
       tool_use_id: "call-1",
       tool_input: { command: "private-command-marker" },
       tool_response: "private-result-marker",
+      session_token_usage: { total_tokens: 234567, input_tokens: 200000, output_tokens: 34567,
+        observed_at: "2026-11-17T00:00:00Z", private: "private-token-marker" },
     };
     const pending = Promise.all([receive(first), receive(second)]);
     assert.equal((await post(incoming)).status, 204);
@@ -280,9 +282,10 @@ test(
     assert.equal(messages[0].harness, "codex");
     assert.equal(messages[0].harnessLabel, "Codex");
     assert.equal(messages[0].toolUseId, "call-1");
+    assert.equal(messages[0].tokenUsage.totalTokens, 234567);
     assert.doesNotMatch(
       JSON.stringify(messages),
-      /private-command-marker|private-result-marker|tool_input|tool_response/,
+      /private-command-marker|private-result-marker|private-token-marker|tool_input|tool_response/,
     );
     const childPending = Promise.all([receive(first), receive(second)]);
     assert.equal((await post({

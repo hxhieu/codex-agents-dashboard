@@ -69,7 +69,8 @@ test("both Codex hook configurations identify every reporter and preserve startu
       for (const group of groups) {
         for (const hook of group.hooks) {
           assert.match(hook.command, /--header X-Harness:codex/);
-          assert.match(hook.commandWindows, /--header X-Harness:codex/);
+          assert.match(hook.commandWindows, /sendHook\('codex',/);
+          assert.doesNotMatch(hook.commandWindows, /cmd\.exe/);
           assert.match(hook.command, /--max-time 1/);
           assert.equal(hook.async, eventName !== "SessionEnd");
         }

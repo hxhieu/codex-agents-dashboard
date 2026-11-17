@@ -6,7 +6,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -19,7 +19,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": false
           }
@@ -32,7 +32,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -45,7 +45,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -58,7 +58,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -71,7 +71,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -84,7 +84,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -97,7 +97,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -110,7 +110,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -123,7 +123,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -136,7 +136,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -149,7 +149,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -162,7 +162,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }
@@ -175,7 +175,7 @@
           {
             "type": "command",
             "shell": "bash",
-            "command": "curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs\" --harness claude-code | curl --silent --output /dev/null --connect-timeout 0.25 --max-time 1 --header Content-Type:application/json --header \"X-Machine:$(hostname)\" --header X-Harness:claude-code --data-binary @- http://192.168.0.177:4321/api/events || true",
             "timeout": 2,
             "async": true
           }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AgentNode } from '../lib/agents';
   import StatusBadge from './StatusBadge.svelte';
+  import TokenUsage from './TokenUsage.svelte';
 
   let { node, now }: { node: AgentNode; now: number } = $props();
   const agent = $derived(node.agent);
@@ -26,6 +27,7 @@
       </summary>
       {#if child.agent}
         <p class="child-activity">{Object.values(child.agent.tools).join(' · ') || child.agent.latestEvent}</p>
+        <TokenUsage usage={child.agent.tokenUsage} compact />
         <div class="child-meta"><span title={child.agent.cwd}>{child.agent.cwd ? project(child.agent.cwd) : 'Project not reported'}</span><time datetime={child.agent.lastSeen} title={new Date(child.agent.lastSeen).toLocaleString()}>Updated {age(child.agent.lastSeen)}</time></div>
       {:else}
         <p class="child-activity">Waiting for this subagent's next update</p>
@@ -46,6 +48,7 @@
   <p class="path" title={agent?.cwd}>{agent?.cwd || 'Waiting for the next parent update'}</p>
   {#if agent}
     <div class="current"><span class="eyebrow">LATEST OBSERVED ACTIVITY</span><p>{Object.values(agent.tools).join(' · ') || agent.latestEvent}</p></div>
+    <TokenUsage usage={agent.tokenUsage} />
   {/if}
   <footer><code title={node.sessionId}>{node.sessionId.slice(0, 12)}</code>{#if agent}<time datetime={agent.lastSeen} title={new Date(agent.lastSeen).toLocaleString()}>Updated {age(agent.lastSeen)}</time>{/if}</footer>
   {#if node.children.length}

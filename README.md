@@ -27,8 +27,9 @@ An empty HTTP 204 response means the event was accepted. An agent card should ap
 ## Connect Codex CLI hooks
 
 1. Use `hooks/codex.json` if its dashboard address matches your server; it identifies each sending computer by hostname automatically and sends `X-Harness: codex`. Alternatively, adapt `examples/hooks.json`: replace `DASHBOARD_HOST` with the dashboard machine's LAN IP or hostname and `my-pc` with a unique name for the sending machine.
-2. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works; install these reporting hooks in only one location to avoid duplicate updates. `hooks/codex.json` is a configuration source, not an automatically loaded file.
-3. Review and trust the added hooks using `/hooks` in Codex CLI. Restart the CLI if necessary for configuration changes to load.
+2. Install Node on each sending machine and copy `hooks/session-tokens.mjs` to `~/.codex/session-tokens.mjs` (or your `CODEX_HOME`). Both command variants respect `CODEX_HOME`. On Windows, the Node bootstrap loads the helper and launches curl directly, so the command works through PowerShell and cmd.
+3. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works; install these reporting hooks in only one location to avoid duplicate updates. `hooks/codex.json` is a configuration source, not an automatically loaded file.
+4. Review and trust the added hooks using `/hooks` in Codex CLI. Restart the CLI if necessary for configuration changes to load.
 
 The example includes Windows and POSIX commands. Reporting uses a one-second network timeout and does not retry failed updates. Background updates can arrive out of order.
 
@@ -39,8 +40,8 @@ Only session and tool metadata is broadcast. Prompt text, command arguments, and
 ## Connect Claude Code hooks
 
 1. Use `hooks/claude-code.json`. Replace `192.168.0.177:4321` if your dashboard address differs. It sends `X-Harness: claude-code` and identifies the sending computer by hostname.
-2. Merge its `hooks` entries into `~/.claude/settings.json` for all projects, or `.claude/settings.json` for one project. Preserve existing settings and handlers; install the reporters in only one location. The file in this repository is a configuration source and is not loaded automatically.
-3. These command hooks use Bash and curl. On Windows, install Git Bash. Check the reporters in Claude Code's `/hooks` menu and restart the session after updating settings.
+2. Install Node and copy `hooks/session-tokens.mjs` to `~/.claude/session-tokens.mjs` (or your `CLAUDE_CONFIG_DIR`). Merge its `hooks` entries into `~/.claude/settings.json` for all projects, or `.claude/settings.json` for one project. Preserve existing settings and handlers; install the reporters in only one location. The file in this repository is a configuration source and is not loaded automatically.
+3. These command hooks use Node, Bash and curl. On Windows, install Git Bash. Check the reporters in Claude Code's `/hooks` menu and restart the session after updating settings.
 
 Claude reporting includes session start/resume/end, prompts, tools, approvals, subagents, and compaction. `AskUserQuestion` shows as awaiting an answer; failed or denied tools clear their active call, and a turn ending in an API error shows as interrupted. Commands discard responses, ignore transport failures, and stop networking after one second. Session-end reporting is synchronous; background delivery can reorder other updates.
 
@@ -54,6 +55,7 @@ Supported harness headers are `codex` and `claude-code`. Older hooks without `X-
 - Open the dashboard before sending updates; previous activity is not loaded.
 - Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
 - Each tab shows up to 200 recent sessions, with parent cards sorted alphabetically by project name. Subagents appear inside their parent's card with their own status, activity, and last update. Select each subagent's header to expand or collapse its details; its status stays visible.
+- **Tokens used** shows cumulative **uncached input + output** for each session. Hover for the exact used count, raw total, input/output/cache breakdown and observation time. Codex uses its reported session counters; Claude combines distinct assistant requests. Parent counts do not add child rows again. `—` means the required breakdown has not arrived; update the installed hooks and copy the helper to enable reporting. Counts refresh on subsequent hooks, so logs that have not flushed yet can lag. No prompt text or session log is sent to the dashboard.
 - A running subagent can appear on its next tool update even if you missed its start event. Subagents that produce no new events after a refresh cannot be recovered from history.
 - Cards show the latest reported activity. Silence does not mean a session is idle or offline.
 - After a connection gap, the dashboard reconnects automatically and keeps existing cards. Missed updates are not recovered.

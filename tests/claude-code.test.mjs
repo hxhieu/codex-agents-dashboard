@@ -4,6 +4,7 @@ import { once } from "node:events";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { applyEvent, groupAgents } from "../src/lib/agents.ts";
 import { normalizeEvent } from "../src/lib/server/harnesses/index.ts";
@@ -90,7 +91,10 @@ test("the generated Bash command forwards stdin and hostname, emits no output, a
   await once(server, "listening");
   t.after(() => server.close());
   const origin = `http://127.0.0.1:${server.address().port}`;
-  const command = config.hooks.PreToolUse[0].hooks[0].command.replace(/http:\/\/[^\s]+/, `${origin}/api/events`);
+  const reporterPath = fileURLToPath(new URL("../hooks/session-tokens.mjs", import.meta.url)).replace(/\\/g, "/");
+  const command = config.hooks.PreToolUse[0].hooks[0].command
+    .replace(/http:\/\/[^\s]+/, `${origin}/api/events`)
+    .replace('${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs', reporterPath);
   async function run() {
     const child = spawn(bash, ["-c", command], { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
     let output = "";

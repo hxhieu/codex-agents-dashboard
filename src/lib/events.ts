@@ -1,3 +1,5 @@
+import type { SessionTokenUsage } from "./tokens";
+
 export const hookEvents = [
   "SessionStart",
   "SessionEnd",
@@ -30,6 +32,7 @@ export interface AgentEvent {
   toolUseId?: string;
   agentId?: string;
   agentType?: string;
+  tokenUsage?: SessionTokenUsage;
 }
 
 export type HookMetadata = Omit<AgentEvent, "id" | "harness" | "harnessLabel" | "machine" | "receivedAt">;

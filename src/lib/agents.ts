@@ -1,4 +1,5 @@
 import type { AgentEvent } from "./events";
+import type { SessionTokenUsage } from "./tokens";
 
 export interface Agent {
   key: string;
@@ -8,6 +9,7 @@ export interface Agent {
   sessionId: string;
   parentSessionId?: string;
   agentType?: string;
+  tokenUsage?: SessionTokenUsage;
   cwd: string;
   status: string;
   lastSeen: string;
@@ -167,6 +169,8 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
     sessionId,
     parentSessionId: previous?.parentSessionId ?? (isSubagent ? event.sessionId : undefined),
     agentType: event.agentType ?? previous?.agentType,
+    tokenUsage: event.tokenUsage && (!previous?.tokenUsage || event.tokenUsage.observedAt >= previous.tokenUsage.observedAt)
+      ? event.tokenUsage : previous?.tokenUsage,
     cwd: event.cwd || previous?.cwd || "",
     status,
     lastSeen: event.receivedAt,

@@ -1,4 +1,5 @@
 import type { HookEventName, HookMetadata } from "../../events";
+import { normalizeSessionTokens } from "../../tokens.ts";
 
 function field(value: unknown, limit = 256): string | undefined {
   return typeof value === "string" && value.trim()
@@ -32,5 +33,6 @@ export function normalizeHookMetadata(
     toolUseId: field(input.tool_use_id),
     agentId,
     agentType: field(input.agent_type),
+    tokenUsage: normalizeSessionTokens(input.session_token_usage),
   };
 }
