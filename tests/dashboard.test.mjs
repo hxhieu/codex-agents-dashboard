@@ -17,6 +17,49 @@ const base = {
   id: "test",
 };
 
+test("late model observations and tool completions do not reopen idle or ended sessions", () => {
+  for (const [ending, expected] of [["Stop", "Awaiting prompt"], ["SessionEnd", "Session ended"],
+    ["Interrupt", "Interrupted"], ["SubagentStop", "Subagent stopped"]]) {
+    let agents = [];
+    const identity = ending === "SubagentStop" ? { agentId: "child" } : {};
+    const update = (eventName, extra = {}) => {
+      agents = applyEvent(agents, { ...base, ...identity, eventName, ...extra });
+    };
+    update("PreToolUse", { toolName: "Bash", toolUseId: "call" });
+    update(ending);
+    const tokenUsage = { totalTokens: 500, observedAt: "2026-11-17T00:00:00Z" };
+    update("PostModelRequest", { tokenUsage });
+    assert.equal(agents[0].status, expected);
+    assert.equal(agents[0].latestEvent, ending);
+    assert.equal(agents[0].tokenUsage.totalTokens, 500);
+    update("PostToolUse", { toolName: "Bash", toolUseId: "call" });
+    update("PreModelRequest");
+    assert.equal(agents[0].status, expected);
+    assert.equal(agents[0].latestEvent, ending);
+    assert.deepEqual(agents[0].tools, {});
+    update("UserPromptSubmit");
+    assert.equal(agents[0].status, "Working");
+    update("PreToolUse", { toolName: "Bash", toolUseId: "new-call" });
+    assert.equal(agents[0].status, "Using tools");
+  }
+});
+
+test("model observations preserve active tools and questions or approvals without losing token updates", () => {
+  for (const [eventName, extra, expected] of [
+    ["PreToolUse", { toolName: "Bash", toolUseId: "a" }, "Using tools"],
+    ["PreToolUse", { toolName: "request_user_input", toolUseId: "q" }, "Awaiting answer"],
+    ["PermissionRequest", { toolName: "Bash" }, "Approval requested"],
+  ]) {
+    let agents = applyEvent([], { ...base, eventName, ...extra });
+    const tools = agents[0].tools;
+    agents = applyEvent(agents, { ...base, eventName: "PostModelRequest",
+      tokenUsage: { totalTokens: 100, observedAt: "2026-11-17T00:00:00Z" } });
+    assert.equal(agents[0].status, expected);
+    assert.deepEqual(agents[0].tools, tools);
+    assert.equal(agents[0].tokenUsage.totalTokens, 100);
+  }
+});
+
 test("parallel tools stay active until all finish; lifecycle and subagent identities stay distinct", () => {
   let agents = [];
   const update = (eventName, extra = {}) => {
@@ -298,6 +341,19 @@ test(
     assert.deepEqual(Object.keys(family.agent.tools), ["call-1"]);
     assert.equal(family.children[0].sessionId, "live-child");
     assert.deepEqual(Object.keys(family.children[0].agent.tools), ["child-call"]);
+    let idleState = applyEvent([], messages[0]);
+    for (const hookEvent of ["Stop", "PostModelRequest", "PostToolUse"]) {
+      const ordered = Promise.all([receive(first), receive(second)]);
+      assert.equal((await post({ ...incoming, hook_event_name: hookEvent,
+        session_token_usage: { total_tokens: 345678, input_tokens: 300000, output_tokens: 45678,
+          cached_input_tokens: 250000, observed_at: "2026-11-17T01:00:00Z" } })).status, 204);
+      const updates = await ordered;
+      assert.deepEqual(updates[0], updates[1]);
+      idleState = applyEvent(idleState, updates[0]);
+      assert.equal(idleState[0].status, "Awaiting prompt");
+      assert.equal(idleState[0].latestEvent, "Stop");
+      assert.equal(idleState[0].tokenUsage.totalTokens, 345678);
+    }
     const claudePending = Promise.all([receive(first), receive(second)]);
     assert.equal((await post({ ...incoming, tool_name: "AskUserQuestion" }, { "X-Harness": "claude-code" })).status, 204);
     const claudeMessages = await claudePending;

@@ -100,6 +100,7 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   const previous = agents.find((agent) => agent.key === key);
   const tools = { ...previous?.tools };
   let status = "Working";
+  let preserveActivity = false;
   switch (event.eventName) {
     case "SessionStart":
       status = "Session started";
@@ -112,9 +113,22 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
         event.toolName ?? "Tool";
       status = "Using tools";
       break;
-    case "PostToolUse":
-      delete tools[event.toolUseId ?? event.toolName ?? "tool"];
-      status = Object.keys(tools).length ? "Using tools" : "Working";
+    case "PostToolUse": {
+      const call = event.toolUseId ?? event.toolName ?? "tool";
+      const wasActive = Object.hasOwn(tools, call);
+      delete tools[call];
+      // Stop clears active calls. A delayed completion cannot reopen that session.
+      preserveActivity = !wasActive && !!previous
+        && ["Awaiting prompt", "Session ended", "Interrupted", "Subagent stopped"].includes(previous.status);
+      status = preserveActivity ? previous!.status : Object.keys(tools).length ? "Using tools" : "Working";
+      break;
+    }
+    case "PreModelRequest":
+    case "PostModelRequest":
+      // Diagnostic/token observations can arrive after Stop or a user question.
+      // Actual prompt, tool and lifecycle hooks own the working state.
+      status = previous?.status ?? "Working";
+      preserveActivity = !!previous;
       break;
     case "PermissionRequest":
       status = "Approval requested";
@@ -174,7 +188,7 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
     cwd: event.cwd || previous?.cwd || "",
     status,
     lastSeen: event.receivedAt,
-    latestEvent: event.eventName,
+    latestEvent: preserveActivity ? previous!.latestEvent : event.eventName,
     tools,
     updates: (previous?.updates ?? 0) + 1,
   };

@@ -24,6 +24,10 @@ test("the tab flags waiting parents and subagents, then clears as work resumes o
   update("Stop");
   assert.equal(page.title, "(1 waiting) Codex / Agents");
   assert.equal(icon.href, "/favicon-attention.svg");
+  update("PostModelRequest", { tokenUsage: { totalTokens: 500, observedAt: new Date().toISOString() } });
+  update("PostToolUse", { toolName: "Bash", toolUseId: "late-call" });
+  assert.equal(page.title, "(1 waiting) Codex / Agents");
+  assert.equal(icon.href, "/favicon-attention.svg");
   update("PreToolUse", { agentId: "child", toolName: "request_user_input", toolUseId: "question" });
   assert.equal(page.title, "(2 waiting) Codex / Agents");
   update("PreToolUse", { toolName: "Bash", toolUseId: "parent-tool" });
