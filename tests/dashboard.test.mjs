@@ -172,7 +172,7 @@ test(
     await new Promise((resolve) => reservation.close(resolve));
     const server = spawn(process.execPath, ["dist/server/entry.mjs"], {
       cwd: new URL("..", import.meta.url),
-      env: { ...process.env, HOST: "127.0.0.1", PORT: String(port) },
+      env: { ...process.env, HOST: "127.0.0.1", PORT: String(port), CODEX_BIN: "missing-codex-for-dashboard-tests" },
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     });
@@ -200,6 +200,7 @@ test(
         if (response.ok) {
           const html = await response.text();
           assert.match(html, /Agent activity/);
+          assert.ok(html.indexOf('Codex weekly left') < html.indexOf('Last update'));
           assert.match(html, /aria-label="Dark mode"/);
           assert.ok(html.indexOf('src="/theme.js"') < html.indexOf('<body'), 'Theme preference loads before the dashboard body.');
           ready = true;
@@ -215,6 +216,13 @@ test(
     const themeScript = await fetch(`${origin}/theme.js`);
     assert.equal(themeScript.status, 200);
     assert.match(await themeScript.text(), /codex-dashboard-theme/);
+    const usageResponse = await fetch(`${origin}/api/usage`);
+    assert.equal(usageResponse.status, 200);
+    assert.equal(usageResponse.headers.get("cache-control"), "no-store");
+    const usage = await usageResponse.json();
+    assert.equal(usage.status, "unavailable");
+    assert.equal(usage.remainingPercent, null);
+    assert.equal(usage.resetsAt, null);
     const post = (payload, headers = {}) =>
       fetch(`${origin}/api/events`, {
         method: "POST",

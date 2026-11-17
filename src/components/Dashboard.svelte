@@ -5,6 +5,7 @@
   import type { AgentEvent } from '../lib/events';
   import AgentCard from './AgentCard.svelte';
   import ThemeToggle from './ThemeToggle.svelte';
+  import WeeklyUsage from './WeeklyUsage.svelte';
 
   let agents = $state<Agent[]>([]);
   let connection = $state('Connecting');
@@ -57,6 +58,7 @@
       <div><span class="metric">{agents.length.toString().padStart(2, '0')}</span><span>Sessions seen</span></div>
       <div><span class="metric">{subagentCount.toString().padStart(2, '0')}</span><span>Subagents</span></div>
       <div><span class="metric">{machineCount.toString().padStart(2, '0')}</span><span>Machines seen</span></div>
+      <div><WeeklyUsage /></div>
       <div class="last-update"><span class="metric small">{agents[0] ? age(agents[0].lastSeen) : '—'}</span><span>Last update</span></div>
       <p>Live view only<span>Refresh to start fresh.</span></p>
     </section>
@@ -164,6 +166,11 @@
     .summary { justify-content: space-between; }
     .summary > div { padding-right: 20px; }
     .summary > div + div { padding-left: 20px; }
+  }
+  @media (max-width: 760px) {
+    .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 14px; }
+    .summary > div { min-width: 0; }
+    .summary > div:nth-child(3n + 1) { border-left: 0; padding-left: 0; }
   }
   @media (max-width: 600px) {
     .shell { padding: 0 5%; }

@@ -49,6 +49,7 @@ Supported harness headers are `codex` and `claude-code`. Older hooks without `X-
 ## What to expect
 
 - Use the theme toggle in the header to switch between light and dark mode. Your choice is remembered in this browser across refreshes; your system theme is used until you choose one.
+- **Codex weekly left**, before **Last update**, shows the weekly quota remaining for the Codex account signed in on the dashboard machine. It refreshes every minute; hover for the reset time and last check. Install Codex and sign in with a ChatGPT account on that machine. If the CLI is outside the server's PATH, set `CODEX_BIN` to its executable path before starting the dashboard. `—` means the weekly limit is unavailable. This metric is independent of LAN agent cards and does not combine other accounts or Claude usage.
 - The browser tab shows an amber pip and a waiting count when sessions or subagents are awaiting a prompt, answer, or approval. The indicator includes sessions hidden by the search filter and clears when none are waiting or you clear the view.
 - Open the dashboard before sending updates; previous activity is not loaded.
 - Refresh or select **Clear view** to clear the current tab. New updates will populate it again.
