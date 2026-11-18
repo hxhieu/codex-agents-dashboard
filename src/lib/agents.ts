@@ -99,6 +99,8 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   const key = JSON.stringify([event.harness, event.machine, sessionId]);
   const previous = agents.find((agent) => agent.key === key);
   const tools = { ...previous?.tools };
+  const isAsyncQuestion = (name: string) => event.harness === "codex"
+    && /(?:^|[._])request_user_input_async$/.test(name);
   let status = "Working";
   let preserveActivity = false;
   switch (event.eventName) {
@@ -116,7 +118,9 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
     case "PostToolUse": {
       const call = event.toolUseId ?? event.toolName ?? "tool";
       const wasActive = Object.hasOwn(tools, call);
-      delete tools[call];
+      // Async questions return an acknowledgement before the user answers.
+      // Keep the pending question until UserPromptSubmit supplies user input.
+      if (!isAsyncQuestion(tools[call] ?? event.toolName ?? "")) delete tools[call];
       // Stop clears active calls. A delayed completion cannot reopen that session.
       preserveActivity = !wasActive && !!previous
         && ["Awaiting prompt", "Session ended", "Interrupted", "Subagent stopped"].includes(previous.status);
@@ -156,15 +160,6 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
       break;
   }
   if (
-    ["PreToolUse", "PostToolUse"].includes(event.eventName) &&
-    Object.values(tools).some((name) =>
-      /(?:^|[._])request_user_input(?:_async)?$/.test(name)
-      || (event.harness === "claude-code" && name === "AskUserQuestion"),
-    )
-  ) {
-    status = "Awaiting answer";
-  }
-  if (
     [
       "Stop",
       "SessionEnd",
@@ -173,7 +168,19 @@ export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
       "UserPromptSubmit",
     ].includes(event.eventName)
   ) {
-    for (const id of Object.keys(tools)) delete tools[id];
+    for (const id of Object.keys(tools)) {
+      // Ending a model turn does not dismiss a question still shown to the user.
+      if (event.eventName !== "Stop" || !isAsyncQuestion(tools[id])) delete tools[id];
+    }
+  }
+  if (
+    status !== "Approval requested" &&
+    Object.values(tools).some((name) =>
+      /(?:^|[._])request_user_input(?:_async)?$/.test(name)
+      || (event.harness === "claude-code" && name === "AskUserQuestion"),
+    )
+  ) {
+    status = "Awaiting answer";
   }
   const next: Agent = {
     key,

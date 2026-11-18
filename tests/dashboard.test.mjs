@@ -183,8 +183,8 @@ test("cyclic parent metadata keeps sessions visible instead of recursing", () =>
   assert.ok(families.every((node) => node.children.length === 0));
 });
 
-test("user questions remain pending through unrelated tool updates and clear when answered", () => {
-  for (const toolName of ["request_user_input", "functions.request_user_input_async"]) {
+test("blocking user questions remain pending through unrelated tools and clear when the tool returns", () => {
+  for (const toolName of ["request_user_input", "functions.request_user_input"]) {
     let agents = [];
     const update = (eventName, extra = {}) => {
       agents = applyEvent(agents, { ...base, eventName, ...extra });
@@ -201,6 +201,45 @@ test("user questions remain pending through unrelated tool updates and clear whe
     assert.equal(agents[0].status, "Approval requested");
     update("Stop");
     assert.equal(agents[0].status, "Awaiting prompt");
+  }
+});
+
+test("Codex async questions wait for user input after acknowledgement, background work and Stop", () => {
+  for (const toolName of ["request_user_input_async", "functions.request_user_input_async"]) {
+    for (const order of [["PreToolUse", "PostToolUse"], ["PostToolUse", "PreToolUse"]]) {
+      let agents = [];
+      const update = (eventName, extra = {}) => {
+        agents = applyEvent(agents, { ...base, eventName, ...extra });
+      };
+      for (const eventName of order) update(eventName, { toolName, toolUseId: "question" });
+      assert.equal(agents[0].status, "Awaiting answer");
+      update("PreToolUse", { toolName: "Bash", toolUseId: "other" });
+      update("PostToolUse", { toolName: "Bash", toolUseId: "other" });
+      update("PreCompact");
+      update("PostCompact");
+      update("Stop");
+      update("PostModelRequest");
+      assert.equal(agents[0].status, "Awaiting answer");
+      assert.deepEqual(agents[0].tools, { question: toolName });
+      update("UserPromptSubmit");
+      assert.equal(agents[0].status, "Working");
+      assert.deepEqual(agents[0].tools, {});
+      update("PostToolUse", { toolName, toolUseId: "question" });
+      assert.equal(agents[0].status, "Working");
+    }
+  }
+});
+
+test("ending or interrupting a session dismisses its async question without a late completion reopening it", () => {
+  for (const [eventName, status] of [["SessionEnd", "Session ended"],
+    ["Interrupt", "Interrupted"], ["SubagentStop", "Subagent stopped"]]) {
+    const identity = eventName === "SubagentStop" ? { agentId: "child" } : {};
+    const question = { ...base, ...identity, toolName: "request_user_input_async", toolUseId: "question" };
+    let agents = applyEvent([], { ...question, eventName: "PreToolUse" });
+    agents = applyEvent(agents, { ...base, ...identity, eventName });
+    agents = applyEvent(agents, { ...question, eventName: "PostToolUse" });
+    assert.equal(agents[0].status, status);
+    assert.deepEqual(agents[0].tools, {});
   }
 });
 
