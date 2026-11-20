@@ -9,7 +9,7 @@ Keep `README.md` focused on user setup and operation. Put implementation, contri
 - `src/pages/api/` contains HTTP endpoints; `src/lib/` holds event validation and browser state; `src/lib/server/broadcast.ts` manages SSE subscribers.
 - `hooks/codex.json` and `hooks/claude-code.json` provide harness configurations. `src/lib/server/harnesses/index.ts` routes `X-Harness` to predefined adapters; each maps raw event names into shared `AgentEvent` fields using the metadata whitelist in `shared.ts`. Add future adapters here; never infer the harness from tool names or prompts.
 - `tests/` contains behavioral tests, `public/` static assets, and `examples/` sample events/hooks.
-- `scripts/windows-service.mjs` manages `node-windows`; `service-entry.mjs` imports the standalone build and handles its IPC shutdown message. Pin the real nvm Node executable, whitelist service environment variables, and keep generated settings/logs in ignored `.windows-service/`. Never pass passwords to node-windows; the user sets the service account in Windows Services. Install stopped with manual startup under LocalService; require the user's account before activation. Enable automatic startup and remove the old task only after the service responds; restore the task on migration failure. Retain legacy task scripts until migration is complete.
+- `scripts/windows-service.mjs` manages `node-windows`; `service-entry.mjs` imports the standalone build and handles its IPC shutdown message. `service:install` creates or overwrites the current install using password-free LocalService (SID `S-1-5-19`), preserving its port and registration; stop before updating its generated WinSW definition and leave manual/stopped until activation. `configure-local-service.ps1` grants read/execute only to the pinned Node executable and app runtime, and modify only to operational logs; never grant profile/Codex-home access or save passwords. Reapply runtime permissions before starting after a rebuild. Keep generated settings/logs in ignored `.windows-service/`. Remove the old task only after HTTP health succeeds; restore it on migration failure.
 - Do not hand-edit generated `dist/`, `.astro/`, or `node_modules/`.
 
 ## Build, Test, and Development Commands
@@ -22,7 +22,7 @@ Use Node **24.13.0** through nvm-windows and **pnpm 10.21.0**. `.nvmrc` records 
 - `pnpm build`: build the standalone Node server.
 - `pnpm test`: test the built server; build first.
 - `pnpm start`: run production; configure `HOST`/`PORT` as needed.
-- `pnpm service:install`, `service:start`, `service:stop`, `service:uninstall`: manage the Windows service from an administrator terminal; `service:status` is read-only. Configure Log On in Windows Services between installation and activation.
+- `pnpm service:install`, `service:start`, `service:stop`, `service:uninstall`: manage the Windows service from an administrator terminal; `service:status` is read-only. Installation also updates an existing service; no password is required for LocalService.
 
 ## Coding Style & Naming Conventions
 
@@ -31,6 +31,8 @@ Use two-space indentation, TypeScript ES modules, explicit event types, and Svel
 ## Testing Guidelines
 
 Use `node:test` and `node:assert/strict` in `tests/*.test.mjs`. Describe observable behavior in titles. Cover validation, metadata filtering, live fanout/no replay, parallel tools, and subagent identity. No coverage threshold is configured. Check responsive layouts and refresh behavior for UI changes.
+
+Windows PowerShell children must use a clean built-in `PSModulePath`; PowerShell 7 paths inherited through Node can break module autoloading. Exercise real `Get-Acl`/`Set-Acl` calls through Node in installer tests; direct shell launches and `-WhatIf` do not cover this failure.
 
 ## Commit & Pull Request Guidelines
 
@@ -41,6 +43,7 @@ Initial history contains only `init commit`; no convention is established. Use i
 - `POST /api/events` requires hook JSON and `X-Machine`; `X-Harness` selects `codex` or `claude-code`. Missing harness headers default to Codex for existing installed hooks; empty/unknown values return 400. Other responses: 204 accepted, 400 invalid event, 413 above 1 MiB, 415 unsupported content type.
 - `GET /api/stream` sends live SSE without replay; 15-second keepalive comments indicate browser connectivity, not agent health.
 - `GET /api/usage` reads only the dashboard machine's Codex weekly quota via an on-demand, short-lived `codex --disable hooks app-server --stdio` process. Initialize, read `account/rateLimits/read`, then terminate; never start or resume a thread. Match the Codex bucket's 10080-minute window in either slot. Return only remaining percentage, reset/check times, and availability; do not expose auth, raw RPC errors, credits or account identity. No caching or usage history; the browser refreshes every minute. `CODEX_BIN` optionally selects the executable.
+- LocalService mode sends `DASHBOARD_CODEX_USAGE_DISABLED=1`, strips user Codex paths, and returns unavailable from `/api/usage` without launching Codex. Hook-supplied agent/token metadata is unaffected.
 - Key sessions and parent relationships by harness/machine/session ID; route every hook carrying a child `agent_id` to that subagent, retaining its parent session. Do not limit child routing to start/stop events. Track parallel tools by call ID.
 - Keep only live subscriber connections server-side; disconnect slow consumers. Browser state is capped at 200 sessions.
 - Model-request hooks update token metadata without changing an existing session's status or latest activity. Late unmatched tool completions must not reopen stopped/idle sessions; a new prompt or tool start resumes activity.

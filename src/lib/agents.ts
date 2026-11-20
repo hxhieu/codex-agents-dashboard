@@ -90,6 +90,24 @@ export function groupAgents(agents: Agent[], query = ""): AgentNode[] {
     .filter((node): node is AgentNode => !!node);
 }
 
+/** Remove a session and its known descendants from this tab, without hiding future events. */
+export function removeAgent(agents: Agent[], key: string): Agent[] {
+  const removed = new Set([key]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const agent of agents) {
+      if (!agent.parentSessionId || removed.has(agent.key)) continue;
+      const parentKey = JSON.stringify([agent.harness, agent.machine, agent.parentSessionId]);
+      if (removed.has(parentKey)) {
+        removed.add(agent.key);
+        changed = true;
+      }
+    }
+  }
+  return agents.filter((agent) => !removed.has(agent.key));
+}
+
 export function applyEvent(agents: Agent[], event: AgentEvent): Agent[] {
   // Tool, prompt, and compaction hooks also carry the child identity. This
   // recreates a child after refresh even when its start event was missed.

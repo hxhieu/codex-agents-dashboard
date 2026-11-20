@@ -7,6 +7,20 @@ import { readCodexWeeklyUsage, weeklyUsageFromLimits } from "../src/lib/server/c
 const now = Date.parse("2026-11-17T00:00:00Z");
 const weekly = { usedPercent: 41, windowDurationMins: 10080, resetsAt: now / 1000 + 86400 };
 
+test("password-free service mode returns unavailable without launching Codex", async (t) => {
+  const previous = process.env.DASHBOARD_CODEX_USAGE_DISABLED;
+  process.env.DASHBOARD_CODEX_USAGE_DISABLED = "1";
+  t.after(() => {
+    if (previous === undefined) delete process.env.DASHBOARD_CODEX_USAGE_DISABLED;
+    else process.env.DASHBOARD_CODEX_USAGE_DISABLED = previous;
+  });
+  let starts = 0;
+  const usage = await readCodexWeeklyUsage(() => { starts++; throw new Error("Must not start"); });
+  assert.equal(starts, 0);
+  assert.equal(usage.status, "unavailable");
+  assert.equal(usage.remainingPercent, null);
+});
+
 test("weekly remaining quota comes from either Codex window and preserves zero remaining", () => {
   for (const slot of ["primary", "secondary"]) {
     const usage = weeklyUsageFromLimits({ rateLimits: { limitId: "codex", [slot]: weekly } }, now);

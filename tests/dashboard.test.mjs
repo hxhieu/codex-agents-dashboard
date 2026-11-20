@@ -4,7 +4,7 @@ import { once } from "node:events";
 import { createServer } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
-import { applyEvent, groupAgents } from "../src/lib/agents.ts";
+import { applyEvent, groupAgents, removeAgent } from "../src/lib/agents.ts";
 import { normalizeEvent } from "../src/lib/server/harnesses/index.ts";
 
 const base = {
@@ -16,6 +16,45 @@ const base = {
   receivedAt: new Date().toISOString(),
   id: "test",
 };
+
+test("removing a card clears its whole family across filters and lets the next update start fresh", () => {
+  let agents = [];
+  const update = (eventName, extra = {}) => {
+    agents = applyEvent(agents, { ...base, eventName, ...extra });
+  };
+  update("PreToolUse", { toolName: "Bash", toolUseId: "old-call",
+    tokenUsage: { totalTokens: 999, observedAt: base.receivedAt } });
+  update("PreToolUse", { agentId: "child", agentType: "visible-child", toolName: "Bash" });
+  update("PreToolUse", { sessionId: "child", agentId: "grandchild", toolName: "Bash" });
+  update("SubagentStart", { agentId: "hidden-sibling" });
+  update("SessionEnd", { machine: "other-pc" });
+  update("SessionEnd", { harness: "claude-code", harnessLabel: "Claude Code" });
+  const [filtered] = groupAgents(agents, "visible-child");
+  assert.equal(filtered.children.length, 1);
+  agents = removeAgent(agents, filtered.key);
+  assert.equal(agents.length, 2);
+  assert.ok(agents.every((agent) => agent.machine !== base.machine || agent.harness !== base.harness));
+  update("PostModelRequest");
+  assert.equal(agents[0].sessionId, base.sessionId);
+  assert.equal(agents[0].updates, 1);
+  assert.equal(agents[0].tokenUsage, undefined);
+  assert.deepEqual(agents[0].tools, {});
+  assert.equal(groupAgents(agents).find((node) => node.key === filtered.key).children.length, 0);
+});
+
+test("subagent removal leaves its parent and siblings; unobserved parent cards can also be cleared", () => {
+  let agents = applyEvent([], { ...base, eventName: "SessionStart" });
+  agents = applyEvent(agents, { ...base, eventName: "SubagentStart", agentId: "child" });
+  agents = applyEvent(agents, { ...base, eventName: "SubagentStart", agentId: "sibling" });
+  agents = applyEvent(agents, { ...base, eventName: "SubagentStart", sessionId: "child", agentId: "grandchild" });
+  const parent = groupAgents(agents)[0];
+  agents = removeAgent(agents, parent.children.find((node) => node.sessionId === "child").key);
+  assert.deepEqual(new Set(agents.map((agent) => agent.sessionId)), new Set([base.sessionId, "sibling"]));
+  const orphaned = agents.filter((agent) => agent.parentSessionId);
+  const placeholder = groupAgents(orphaned)[0];
+  assert.equal(placeholder.agent, undefined);
+  assert.deepEqual(removeAgent(orphaned, placeholder.key), []);
+});
 
 test("late model observations and tool completions do not reopen idle or ended sessions", () => {
   for (const [ending, expected] of [["Stop", "Awaiting prompt"], ["SessionEnd", "Session ended"],

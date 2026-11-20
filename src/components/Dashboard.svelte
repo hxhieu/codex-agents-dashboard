@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { applyEvent, groupAgents, type Agent } from '../lib/agents';
+  import { applyEvent, groupAgents, removeAgent, type Agent } from '../lib/agents';
   import { updateTabAttention } from '../lib/attention';
   import type { AgentEvent } from '../lib/events';
   import AgentCard from './AgentCard.svelte';
@@ -83,7 +83,7 @@
       {:else}
         <div class="grid">
           {#each visible as node (node.key)}
-            <AgentCard {node} {now} />
+            <AgentCard {node} {now} onremove={(key) => { agents = removeAgent(agents, key); }} />
           {/each}
         </div>
       {/if}

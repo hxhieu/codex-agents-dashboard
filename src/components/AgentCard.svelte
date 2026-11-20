@@ -3,7 +3,7 @@
   import StatusBadge from './StatusBadge.svelte';
   import TokenUsage from './TokenUsage.svelte';
 
-  let { node, now }: { node: AgentNode; now: number } = $props();
+  let { node, now, onremove }: { node: AgentNode; now: number; onremove: (key: string) => void } = $props();
   const agent = $derived(node.agent);
 
   function age(timestamp: string): string {
@@ -18,12 +18,22 @@
   }
 </script>
 
+{#snippet removeButton(target: AgentNode)}
+  <button
+    type="button"
+    class="remove"
+    aria-label={`Remove session ${target.sessionId} on ${target.machine} from this view`}
+    title="Remove from this view; the next update brings it back"
+    onclick={(event) => { event.preventDefault(); event.stopPropagation(); onremove(target.key); }}
+  ><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg></button>
+{/snippet}
+
 {#snippet subagentRow(child: AgentNode)}
   <li>
     <details open>
       <summary>
         <span class="child-name"><span class="chevron" aria-hidden="true">›</span><strong>{child.agent?.agentType || 'Subagent'}</strong><code title={child.sessionId}>{child.sessionId.slice(0, 8)}</code></span>
-        {#if child.agent}<StatusBadge status={child.agent.status} />{/if}
+        <span class="card-actions">{#if child.agent}<StatusBadge status={child.agent.status} />{/if}{@render removeButton(child)}</span>
       </summary>
       {#if child.agent}
         <p class="child-activity">{Object.values(child.agent.tools).join(' · ') || child.agent.latestEvent}</p>
@@ -42,7 +52,7 @@
 <article class="card">
   <header class="card-top">
     <span class="machine"><span aria-hidden="true">▣</span> {node.machine}<span class="harness">{node.harnessLabel}</span></span>
-    {#if agent}<StatusBadge status={agent.status} />{:else}<span class="unobserved">Parent not observed yet</span>{/if}
+    <div class="card-actions">{#if agent}<StatusBadge status={agent.status} />{:else}<span class="unobserved">Parent not observed yet</span>{/if}{@render removeButton(node)}</div>
   </header>
   <h2>{agent ? project(agent.cwd) : 'Parent session'}</h2>
   <p class="path" title={agent?.cwd}>{agent?.cwd || 'Waiting for the next parent update'}</p>
@@ -62,7 +72,10 @@
 <style>
   .card { min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 18px; }
   .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 25px; }
-  .machine { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+  .machine { min-width: 0; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+  .card-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .remove { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: var(--muted); }
+  .remove:hover { background: var(--surface-raised); color: var(--text); border-color: var(--accent-border); }
   .machine > span { margin-right: 4px; color: var(--faint); }
   .machine > .harness { margin: 0 0 0 7px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 4px; font-size: 9px; white-space: nowrap; }
   .unobserved { font-size: 10px; color: var(--faint); }

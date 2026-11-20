@@ -1,12 +1,12 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
-import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const serviceName = "codexagentsdashboard.exe";
+export const localServiceSid = "S-1-5-19";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const stateDir = join(root, ".windows-service");
 const configFile = join(stateDir, "config.json");
@@ -15,10 +15,14 @@ export function serviceOptions(config, projectRoot = root) {
   const env = [
     { name: "HOST", value: "0.0.0.0" },
     { name: "PORT", value: String(config.port) },
-    { name: "CODEX_HOME", value: config.codexHome },
     { name: "PATH", value: `${dirname(config.nodePath)};%PATH%` },
   ];
-  if (config.codexBin) env.push({ name: "CODEX_BIN", value: config.codexBin });
+  if (config.account === "local-service") {
+    env.push({ name: "DASHBOARD_CODEX_USAGE_DISABLED", value: "1" });
+  } else {
+    if (config.codexHome) env.push({ name: "CODEX_HOME", value: config.codexHome });
+    if (config.codexBin) env.push({ name: "CODEX_BIN", value: config.codexBin });
+  }
   return {
     name: "Codex Agents Dashboard",
     description: "Live LAN dashboard for Codex CLI and Claude Code agents.",
@@ -33,13 +37,52 @@ export function serviceOptions(config, projectRoot = root) {
     maxRestarts: 3,
     stopparentfirst: true,
     logging: { mode: "roll-by-size", sizeThreshold: 1024, keepFiles: 2 },
+    logpath: join(projectRoot, ".windows-service", "logs"),
   };
+}
+
+export function serviceAccountAllowed(serviceSid, userSid, account) {
+  return serviceSid === (account === "local-service" ? localServiceSid : userSid);
+}
+
+export function installationConfig(nodePath, previous = {}) {
+  return {
+    nodePath,
+    account: "local-service",
+    port: Number.isInteger(previous.port) && previous.port > 0 && previous.port <= 65535 ? previous.port : 4321,
+  };
+}
+
+export function overwriteServiceDefinition(service) {
+  // node-windows 1.0.0-beta.8 exposes its generated WinSW configuration via
+  // this getter, but has no update method. Keep the registered service and exe.
+  writeFileSync(join(service.root, `${service.id}.xml`), service._xml);
+}
+
+export function windowsPowerShellEnvironment(environment = process.env) {
+  // PowerShell 7 only cleans module paths when it launches powershell.exe
+  // directly. Through Node/pnpm, Windows PowerShell inherits incompatible PS7
+  // modules. These management commands need only Windows' built-in modules.
+  const childEnvironment = Object.fromEntries(Object.entries(environment)
+    .filter(([key]) => key.toLowerCase() !== "psmodulepath"));
+  const windowsRoot = Object.entries(environment).find(([key]) => key.toLowerCase() === "systemroot")?.[1];
+  if (!windowsRoot) throw new Error("SystemRoot is missing; Windows PowerShell cannot be located.");
+  childEnvironment.PSModulePath = join(windowsRoot, "System32", "WindowsPowerShell", "v1.0", "Modules");
+  return childEnvironment;
+}
+
+function configureLocalService() {
+  console.log(execFileSync(join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
+    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
+      join(root, "scripts", "configure-local-service.ps1"), "-ProjectRoot", root],
+    { windowsHide: true, encoding: "utf8", timeout: 120_000, env: windowsPowerShellEnvironment() }).trim());
 }
 
 function powershell(code) {
   return execFileSync(join(process.env.SystemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
     ["-NoProfile", "-NonInteractive", "-Command", `$ErrorActionPreference='Stop'; ${code}`],
-    { windowsHide: true, encoding: "utf8", timeout: 45_000, env: { ...process.env, DASHBOARD_SERVICE_NAME: serviceName } }).trim();
+    { windowsHide: true, encoding: "utf8", timeout: 45_000,
+      env: { ...windowsPowerShellEnvironment(), DASHBOARD_SERVICE_NAME: serviceName } }).trim();
 }
 
 function operation(service, method, event) {
@@ -83,30 +126,31 @@ async function main(command) {
 
   let config;
   if (command === "install") {
-    if (installed) throw new Error("Service is already installed. Use service:start, or uninstall before reinstalling.");
     if (!existsSync(join(root, "dist", "server", "entry.mjs"))) throw new Error("Run pnpm build first.");
     const expected = readFileSync(join(root, ".nvmrc"), "utf8").trim();
     if (process.versions.node !== expected) throw new Error(`Run nvm use ${expected} first.`);
-    const codexBin = process.env.CODEX_BIN || powershell("(Get-Command codex.exe -CommandType Application -ErrorAction SilentlyContinue).Source");
-    config = {
-      nodePath: realpathSync(process.execPath),
-      codexHome: resolve(process.env.CODEX_HOME || join(homedir(), ".codex")),
-      codexBin: codexBin ? resolve(codexBin) : undefined,
-      port: 4321,
-    };
+    const previous = existsSync(configFile) ? JSON.parse(readFileSync(configFile, "utf8").replace(/^\uFEFF/, "")) : {};
+    config = installationConfig(realpathSync(process.execPath), previous);
+    if (installed) {
+      // Stop before replacing any live configuration; never unregister/delete
+      // the working service as part of a routine reinstall.
+      powershell("Stop-Service $env:DASHBOARD_SERVICE_NAME; (Get-Service $env:DASHBOARD_SERVICE_NAME).WaitForStatus('Stopped',[TimeSpan]::FromSeconds(30)); Set-Service $env:DASHBOARD_SERVICE_NAME -StartupType Manual");
+    }
     mkdirSync(stateDir, { recursive: true });
     writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
   } else {
     if (!installed) throw new Error("Service is not installed. Run pnpm service:install first.");
-    config = JSON.parse(readFileSync(configFile, "utf8"));
+    config = JSON.parse(readFileSync(configFile, "utf8").replace(/^\uFEFF/, ""));
   }
 
   if (command === "start") {
-    // The user enters credentials in Windows Services, never in source, JSON,
-    // command arguments, or node-windows' generated service XML.
-    powershell("$svc=Get-CimInstance Win32_Service -Filter \"Name='$env:DASHBOARD_SERVICE_NAME'\"; $account=[Security.Principal.NTAccount]::new($svc.StartName); if ($account.Translate([Security.Principal.SecurityIdentifier]).Value -ne [Security.Principal.WindowsIdentity]::GetCurrent().User.Value) { throw 'In Windows Services, set Codex Agents Dashboard > Properties > Log On to your Windows account first.' }");
+    const identity = JSON.parse(powershell("$svc=Get-CimInstance Win32_Service -Filter \"Name='$env:DASHBOARD_SERVICE_NAME'\"; $account=[Security.Principal.NTAccount]::new($svc.StartName); @{serviceSid=$account.Translate([Security.Principal.SecurityIdentifier]).Value; userSid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value} | ConvertTo-Json -Compress"));
+    if (!serviceAccountAllowed(identity.serviceSid, identity.userSid, config.account)) {
+      throw new Error("The service account does not match its setup. Rerun pnpm service:install to configure password-free LocalService.");
+    }
     const alreadyRunning = powershell("(Get-Service $env:DASHBOARD_SERVICE_NAME).Status") === "Running";
     if (alreadyRunning) { console.log("Service is already running."); return; }
+    if (config.account === "local-service") configureLocalService();
     // Retain the old task until the replacement is configured. Restore it if
     // starting the service fails, so migration does not leave the dashboard down.
     const oldTask = powershell("$task=Get-ScheduledTask -TaskName 'Codex Agents Dashboard' -TaskPath '\\' -ErrorAction SilentlyContinue; if ($task -and $task.Description -eq 'Starts the production Codex Agents Dashboard at sign-in.') { Disable-ScheduledTask -InputObject $task | Out-Null; Stop-ScheduledTask -InputObject $task; 'True' } else { 'False' }") === "True";
@@ -137,17 +181,18 @@ async function main(command) {
   const { Service } = (await import("node-windows")).default;
   const service = new Service(serviceOptions(config));
   service.directory(stateDir);
-  // Safe, password-free holding account. Configure the real account in the
-  // Services UI before activation, so the service can read Node and Codex files.
+  // Built-in account: never put a user password into generated service XML.
   service.logOnAs.domain = "NT AUTHORITY";
   service.logOnAs.account = "LocalService";
   service.logOnAs.password = "";
   if (command === "install") {
-    await operation(service, "install", "install");
+    mkdirSync(join(stateDir, "logs"), { recursive: true });
+    if (installed) overwriteServiceDefinition(service);
+    else await operation(service, "install", "install");
     if (powershell("[bool](Get-Service -Name $env:DASHBOARD_SERVICE_NAME -ErrorAction SilentlyContinue)") !== "True") throw new Error("Windows did not register the service.");
     powershell("Set-Service $env:DASHBOARD_SERVICE_NAME -StartupType Manual");
-    console.log("Installed, stopped. Open Windows Services > Codex Agents Dashboard > Properties > Log On.");
-    console.log("Select your Windows account and enter its password there, then run pnpm service:start.");
+    configureLocalService();
+    console.log(`${installed ? "Updated" : "Installed"}, stopped, as LocalService without a password. Run pnpm service:start.`);
     console.log("The existing scheduled task is unchanged until the service starts successfully.");
   } else {
     powershell("Stop-Service $env:DASHBOARD_SERVICE_NAME -ErrorAction SilentlyContinue");

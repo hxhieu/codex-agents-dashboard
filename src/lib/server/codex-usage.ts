@@ -47,6 +47,7 @@ function startCodex(): CodexProcess {
 
 /** Read limits without creating/resuming any agent session or returning account data. */
 export async function readCodexWeeklyUsage(start = startCodex, timeoutMs = 10_000): Promise<WeeklyUsage> {
+  if (process.env.DASHBOARD_CODEX_USAGE_DISABLED === "1") return weeklyUsageFromLimits(null);
   try {
     const result = await new Promise<unknown>((resolve, reject) => {
       const child = start();
