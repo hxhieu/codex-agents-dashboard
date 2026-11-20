@@ -72,3 +72,37 @@ pnpm start
 ```
 
 Run one server instance for all connected dashboards.
+
+## Run as a Windows service
+
+The dashboard uses `node-windows` for a native background service with no terminal window. Windows starts the service automatically, including before sign-in, and the wrapper restarts failed Node processes.
+
+1. Open PowerShell **as administrator under your usual Windows account**. From this project directory, run:
+
+   ```powershell
+   nvm use 24.13.0
+   pnpm install
+   pnpm build
+   pnpm service:install
+   ```
+
+2. Open **Windows Services**, find **Codex Agents Dashboard**, and open **Properties > Log On**. Select **This account**, enter your Windows account and its **password** (not a Windows Hello PIN), then apply. Enter credentials only in Windows Services. This gives the service access to your Node installation and existing Codex sign-in for weekly usage. Installation leaves it stopped with manual startup under a restricted holding account until this step is complete.
+
+3. In the administrator terminal, run:
+
+   ```powershell
+   pnpm service:start
+   ```
+
+   After the dashboard responds at **http://localhost:4321**, automatic startup is enabled. If the previous dashboard scheduled task exists, it is stopped during migration and removed only after the service responds. A failed migration restores that task. Other servers are not stopped; stop `pnpm dev` or `pnpm start` yourself if they occupy port 4321.
+
+Manage it in Windows Services or from an administrator terminal:
+
+```powershell
+pnpm service:status
+pnpm service:stop
+pnpm service:start
+pnpm service:uninstall
+```
+
+For updates, stop the service, run `pnpm build`, then start it again. Keep this project folder, its dependencies, and Node 24.13.0 installed. The service pins the actual nvm executable, so changing your terminal's Node version does not affect it. Reinstall and repeat the account setup after moving the project or changing that executable. Machine-specific settings and bounded operational logs live in `.windows-service/`, which is excluded from Git; agent activity is not saved. Installation and account configuration require administrator access and cannot be completed from a normal terminal.

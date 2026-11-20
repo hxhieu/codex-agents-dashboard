@@ -9,6 +9,7 @@ Keep `README.md` focused on user setup and operation. Put implementation, contri
 - `src/pages/api/` contains HTTP endpoints; `src/lib/` holds event validation and browser state; `src/lib/server/broadcast.ts` manages SSE subscribers.
 - `hooks/codex.json` and `hooks/claude-code.json` provide harness configurations. `src/lib/server/harnesses/index.ts` routes `X-Harness` to predefined adapters; each maps raw event names into shared `AgentEvent` fields using the metadata whitelist in `shared.ts`. Add future adapters here; never infer the harness from tool names or prompts.
 - `tests/` contains behavioral tests, `public/` static assets, and `examples/` sample events/hooks.
+- `scripts/windows-service.mjs` manages `node-windows`; `service-entry.mjs` imports the standalone build and handles its IPC shutdown message. Pin the real nvm Node executable, whitelist service environment variables, and keep generated settings/logs in ignored `.windows-service/`. Never pass passwords to node-windows; the user sets the service account in Windows Services. Install stopped with manual startup under LocalService; require the user's account before activation. Enable automatic startup and remove the old task only after the service responds; restore the task on migration failure. Retain legacy task scripts until migration is complete.
 - Do not hand-edit generated `dist/`, `.astro/`, or `node_modules/`.
 
 ## Build, Test, and Development Commands
@@ -21,6 +22,7 @@ Use Node **24.13.0** through nvm-windows and **pnpm 10.21.0**. `.nvmrc` records 
 - `pnpm build`: build the standalone Node server.
 - `pnpm test`: test the built server; build first.
 - `pnpm start`: run production; configure `HOST`/`PORT` as needed.
+- `pnpm service:install`, `service:start`, `service:stop`, `service:uninstall`: manage the Windows service from an administrator terminal; `service:status` is read-only. Configure Log On in Windows Services between installation and activation.
 
 ## Coding Style & Naming Conventions
 
