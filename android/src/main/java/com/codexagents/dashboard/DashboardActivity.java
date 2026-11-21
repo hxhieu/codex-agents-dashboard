@@ -1,5 +1,6 @@
 package com.codexagents.dashboard;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -17,6 +18,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.WindowInsets;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -36,6 +38,7 @@ public final class DashboardActivity extends Activity {
   private static final String HOME = "http://" + LOOPBACK + ":" + DashboardServer.PORT + "/";
   private static final String LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK";
   private static final int LAN_REQUEST = 1;
+  private static final int NOTIFICATION_REQUEST = 2;
   private static final int HTTP_TIMEOUT_MS = 2000;
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
   private final Map<Network, String> wifiAddresses = new LinkedHashMap<>();
@@ -44,7 +47,10 @@ public final class DashboardActivity extends Activity {
   private FrameLayout root;
   private TextView status;
   private WebView web;
-  private boolean requestedPermission;
+  private WaitingNotifications notifications;
+  private boolean requestedLanPermission;
+  private boolean requestedNotificationPermission;
+  private boolean permissionPromptOpen;
   private volatile int generation;
   private boolean visible;
   // The worker owns the listeners and serializes their start and stop operations.
@@ -58,6 +64,7 @@ public final class DashboardActivity extends Activity {
   protected void onCreate(Bundle state) {
     super.onCreate(state);
     connectivity = getSystemService(ConnectivityManager.class);
+    notifications = new WaitingNotifications(this);
     root = new FrameLayout(this);
     root.setOnApplyWindowInsetsListener((view, insets) -> {
       Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
@@ -76,14 +83,12 @@ public final class DashboardActivity extends Activity {
   protected void onStart() {
     super.onStart();
     visible = true;
+    notifications.setWaitingCount(0);
     int current = ++generation;
     showStatus("Starting dashboard…");
     worker.execute(() -> startDashboard(current));
     watchWifi();
-    if (!hasLanPermission() && !requestedPermission) {
-      requestedPermission = true;
-      requestPermissions(new String[] {LOCAL_NETWORK}, LAN_REQUEST);
-    }
+    requestStartupPermissions();
   }
 
   @Override
@@ -112,7 +117,26 @@ public final class DashboardActivity extends Activity {
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
     super.onRequestPermissionsResult(requestCode, permissions, results);
-    if (requestCode == LAN_REQUEST && visible) watchWifi();
+    if (requestCode != LAN_REQUEST && requestCode != NOTIFICATION_REQUEST) return;
+    permissionPromptOpen = false;
+    if (!visible) return;
+    if (requestCode == LAN_REQUEST) watchWifi();
+    else notifications.refresh();
+    requestStartupPermissions();
+  }
+
+  private void requestStartupPermissions() {
+    if (permissionPromptOpen) return;
+    if (!hasLanPermission() && !requestedLanPermission) {
+      requestedLanPermission = true;
+      permissionPromptOpen = true;
+      requestPermissions(new String[] {LOCAL_NETWORK}, LAN_REQUEST);
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !requestedNotificationPermission
+        && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+      requestedNotificationPermission = true;
+      permissionPromptOpen = true;
+      requestPermissions(new String[] {Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_REQUEST);
+    }
   }
 
   private boolean hasLanPermission() {
@@ -230,6 +254,12 @@ public final class DashboardActivity extends Activity {
     settings.setAllowFileAccess(false);
     settings.setAllowContentAccess(false);
     settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+    view.setWebChromeClient(new WebChromeClient() {
+      @Override
+      public void onReceivedTitle(WebView view, String title) {
+        if (visible && HOME.equals(view.getUrl())) notifications.updateFromTitle(title);
+      }
+    });
     view.setWebViewClient(new WebViewClient() {
       @Override
       public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {

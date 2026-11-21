@@ -97,7 +97,7 @@ pnpm install --frozen-lockfile
 adb install -r android/build/codex-agents-dashboard-debug.apk
 ```
 
-Open **Codex Agents Dashboard** on the phone. If Android asks for local-network access, allow it to accept incoming hooks.
+Open **Codex Agents Dashboard** on the phone. If Android asks for local-network access, allow it to accept incoming hooks. Allow notifications to see idle-session alerts in the status bar and notification shade. The alert updates as sessions wait or resume and clears when none are idle.
 
 ## Run as a Windows service
 

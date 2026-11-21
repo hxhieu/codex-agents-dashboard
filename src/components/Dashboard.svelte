@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { applyEvent, groupAgents, removeAgent, type Agent } from '../lib/agents';
-  import { updateTabAttention } from '../lib/attention';
+  import { countWaitingSessions, updateTabAttention } from '../lib/attention';
   import type { AgentEvent } from '../lib/events';
   import AgentCard from './AgentCard.svelte';
   import ThemeToggle from './ThemeToggle.svelte';
@@ -19,6 +19,7 @@
   const visible = $derived(groupAgents(agents, query));
   const subagentCount = $derived(agents.filter((agent) => agent.parentSessionId).length);
   const machineCount = $derived(new Set(agents.map((agent) => agent.machine)).size);
+  const waitingCount = $derived(countWaitingSessions(agents));
 
   $effect(() => { updateTabAttention(agents); });
 
@@ -54,7 +55,12 @@
 
 <div class="shell">
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Codex Agents home"><span class="mark">›_</span> CODEX <span class="slash">/</span> <span class="brand-light">AGENTS</span></a>
+    <div class="brand-group">
+      <a class="brand" href="/" aria-label="Codex Agents home"><span class="mark">›_</span> CODEX <span class="slash">/</span> <span class="brand-light">AGENTS</span></a>
+      {#if android}
+        <span class="waiting-label" role="status">{#if waitingCount}({waitingCount} idle){/if}</span>
+      {/if}
+    </div>
     <div class="header-actions"><ThemeToggle /><span class="connection" class:connected={connection === 'Connected'}><i></i>{connection}</span></div>
   </header>
 
@@ -118,6 +124,8 @@
   :global(code) { font-family: Consolas, "SFMono-Regular", monospace; }
   .shell { max-width: 1600px; margin: auto; padding: 0 3%; }
   .topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .brand-group { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px; }
+  .waiting-label { color: var(--attention-text); font-size: 11px; font-weight: 650; white-space: nowrap; }
   .brand { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 750; letter-spacing: 1.8px; text-decoration: none; color: inherit; }
   .mark { background: var(--brand-background); color: var(--brand-text); border-radius: 7px; display: grid; place-items: center; width: 30px; height: 30px; font: 700 21px Consolas, monospace; letter-spacing: -4px; padding-right: 5px; }
   .brand-light { font-weight: 450; }
@@ -187,6 +195,7 @@
   @media (max-width: 600px) {
     .shell { padding: 0 5%; }
     .topbar { height: 58px; }
+    .waiting-label { font-size: 10px; }
     .brand { gap: 7px; font-size: 10px; letter-spacing: 1px; }
     .connection { font-size: 10px; padding: 7px 9px; }
     main { padding-top: 10px; }
