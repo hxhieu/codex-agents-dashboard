@@ -1,6 +1,8 @@
 ---
 import Dashboard from '../components/Dashboard.svelte';
 import '../styles/theme.css';
+
+const { android = false } = Astro.props;
 ---
 <!doctype html>
 <html lang="en">
@@ -13,5 +15,5 @@ import '../styles/theme.css';
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Codex / Agents</title>
   </head>
-  <body><Dashboard client:load /></body>
+  <body><Dashboard client:load {android} /></body>
 </html>

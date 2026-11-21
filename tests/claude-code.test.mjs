@@ -32,7 +32,7 @@ test("every Claude reporter uses supported settings fields and maps to a safe da
         assert.equal(hook.async, name !== "SessionEnd");
         assert.match(hook.command, /X-Harness:claude-code/);
         assert.match(hook.command, /--max-time 1/);
-        assert.match(hook.command, /\|\| true$/);
+        assert.match(hook.command, /-- "\$CODEX_DASHBOARD_URL" \|\| true; fi$/);
       }
     }
   }
@@ -83,28 +83,36 @@ test("Claude child tools recreate subagents after refresh without overwriting a 
 
 const bash = process.platform === "win32" ? join(process.env.ProgramFiles ?? "C:/Program Files", "Git/bin/bash.exe") : "/bin/bash";
 
-test("the generated Bash command forwards stdin and hostname, emits no output, and ignores network failure", {
+test("the Claude Bash command uses the environment URL, skips reporting when unset, and ignores network failure", {
   skip: !existsSync(bash), timeout: 15_000,
 }, async (t) => {
   const server = createServer();
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   t.after(() => server.close());
-  const origin = `http://127.0.0.1:${server.address().port}`;
+  const url = `http://127.0.0.1:${server.address().port}/api/events`;
   const reporterPath = fileURLToPath(new URL("../hooks/session-tokens.mjs", import.meta.url)).replace(/\\/g, "/");
   const command = config.hooks.PreToolUse[0].hooks[0].command
-    .replace(/http:\/\/[^\s]+/, `${origin}/api/events`)
     .replace('${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-tokens.mjs', reporterPath);
-  async function run() {
-    const child = spawn(bash, ["-c", command], { windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
+  async function run(endpoint) {
+    const child = spawn(bash, ["-c", command], {
+      windowsHide: true,
+      env: { ...process.env, CODEX_DASHBOARD_URL: endpoint },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
     let output = "";
     child.stdout.on("data", (chunk) => { output += chunk; });
     child.stderr.on("data", (chunk) => { output += chunk; });
+    child.stdin.on("error", () => {});
     const exited = once(child, "exit");
     child.stdin.end(JSON.stringify({ ...base, hook_event_name: "PreToolUse" }));
     assert.equal((await exited)[0], 0);
     assert.equal(output, "");
   }
+  let requests = 0;
+  server.on("request", () => { requests++; });
+  await run();
+  assert.equal(requests, 0);
   const received = new Promise((resolve) => {
     server.once("request", async (request, response) => {
       let body = "";
@@ -113,12 +121,12 @@ test("the generated Bash command forwards stdin and hostname, emits no output, a
       resolve({ headers: request.headers, body: JSON.parse(body) });
     });
   });
-  await run();
+  await run(url);
   const request = await received;
   assert.equal(request.headers["x-harness"], "claude-code");
   assert.ok(request.headers["x-machine"]);
   assert.equal(request.headers["content-type"], "application/json");
   assert.deepEqual(request.body, { ...base, hook_event_name: "PreToolUse" });
   await new Promise((resolve) => server.close(resolve));
-  await run();
+  await run(url);
 });

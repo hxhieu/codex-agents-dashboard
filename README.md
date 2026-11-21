@@ -24,9 +24,19 @@ curl.exe --silent --show-error --max-time 2 -H "Content-Type: application/json" 
 
 An empty HTTP 204 response means the event was accepted. An agent card should appear in every connected dashboard. Refreshing the browser clears its cards until new updates arrive.
 
+Set `CODEX_DASHBOARD_URL` on each sending computer before launching Codex CLI or Claude Code. Use the full endpoint, including `/api/events`. Reporting is skipped when the variable is unset or empty.
+
+```powershell
+$env:CODEX_DASHBOARD_URL = 'http://DASHBOARD_HOST:4321/api/events'
+```
+
+```bash
+export CODEX_DASHBOARD_URL='http://DASHBOARD_HOST:4321/api/events'
+```
+
 ## Connect Codex CLI hooks
 
-1. Use `hooks/codex.json` if its dashboard address matches your server; it identifies each sending computer by hostname automatically and sends `X-Harness: codex`. Alternatively, adapt `examples/hooks.json`: replace `DASHBOARD_HOST` with the dashboard machine's LAN IP or hostname and `my-pc` with a unique name for the sending machine.
+1. Use `hooks/codex.json`. It reads the endpoint from `CODEX_DASHBOARD_URL`, identifies each sending computer by hostname, and sends `X-Harness: codex`. You can also adapt `examples/hooks.json` by replacing `DASHBOARD_HOST` with the dashboard machine's LAN IP or hostname and `my-pc` with a unique name for the sending machine.
 2. Install Node on each sending machine and copy `hooks/session-tokens.mjs` to `~/.codex/session-tokens.mjs` (or your `CODEX_HOME`). Both command variants respect `CODEX_HOME`. On Windows, the Node bootstrap loads the helper and launches curl directly, so the command works through PowerShell and cmd.
 3. Merge its hook entries into `~/.codex/hooks.json` on each machine. Preserve existing entries, including handlers for the same event. A project-specific `.codex/hooks.json` also works; install these reporting hooks in only one location to avoid duplicate updates. `hooks/codex.json` is a configuration source, not an automatically loaded file.
 4. Review and trust the added hooks using `/hooks` in Codex CLI. Restart the CLI if necessary for configuration changes to load.
@@ -39,7 +49,7 @@ Only session and tool metadata is broadcast. Prompt text, command arguments, and
 
 ## Connect Claude Code hooks
 
-1. Use `hooks/claude-code.json`. Replace `192.168.0.177:4321` if your dashboard address differs. It sends `X-Harness: claude-code` and identifies the sending computer by hostname.
+1. Use `hooks/claude-code.json`. It reads the endpoint from `CODEX_DASHBOARD_URL`, identifies the sending computer by hostname, and sends `X-Harness: claude-code`.
 2. Install Node and copy `hooks/session-tokens.mjs` to `~/.claude/session-tokens.mjs` (or your `CLAUDE_CONFIG_DIR`). Merge its `hooks` entries into `~/.claude/settings.json` for all projects, or `.claude/settings.json` for one project. Preserve existing settings and handlers; install the reporters in only one location. The file in this repository is a configuration source and is not loaded automatically.
 3. These command hooks use Node, Bash and curl. On Windows, install Git Bash. Check the reporters in Claude Code's `/hooks` menu and restart the session after updating settings.
 
@@ -73,6 +83,21 @@ pnpm start
 ```
 
 Run one server instance for all connected dashboards.
+
+## Run on Android
+
+The Android app hosts the dashboard on your phone. Open it while connected to your trusted Wi-Fi and set `CODEX_DASHBOARD_URL` on each sending computer to the **Hook URL** shown in the app. Keep the app visible to receive events. Activity sent while the app is closed or the phone sleeps is lost. The **Codex weekly left** metric shows `—` on Android.
+
+To build and install the debug APK from Windows, set `JAVA_HOME` to a JDK 17 installation and `ANDROID_HOME` to an Android SDK with Platform 37.0, Build Tools 37.0.0, and Platform Tools. Enable USB debugging on the phone, then run:
+
+```powershell
+nvm use 24.13.0
+pnpm install --frozen-lockfile
+.\android\build.ps1
+adb install -r android/build/codex-agents-dashboard-debug.apk
+```
+
+Open **Codex Agents Dashboard** on the phone. If Android asks for local-network access, allow it to accept incoming hooks.
 
 ## Run as a Windows service
 

@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { mkdtemp, writeFile, mkdir, rm, copyFile, readFile } from "node:fs/promises";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:http";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
 import { enrichHook, codexTokensFromRecords, claudeTokenAccumulator } from "../hooks/session-tokens.mjs";
@@ -120,7 +119,7 @@ test("token snapshots survive unrelated hooks, ignore reordered older values and
   assert.equal(agents.find((agent) => agent.harness === "claude-code").tokenUsage.totalTokens, 70);
 });
 
-test("Windows hooks work through cmd, Windows PowerShell and PowerShell 7 with helper paths containing spaces", {
+test("Windows hooks use the environment URL through cmd and both PowerShells with helper paths containing spaces", {
   skip: process.platform !== "win32", timeout: 15_000,
 }, async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "dashboard tokens home "));
@@ -134,31 +133,43 @@ test("Windows hooks work through cmd, Windows PowerShell and PowerShell 7 with h
   await once(server, "listening");
   t.after(() => { if (server.listening) server.close(); });
   const config = JSON.parse(await readFile(new URL("../hooks/codex.json", import.meta.url), "utf8"));
-  const command = config.hooks.PostToolUse[0].hooks[0].commandWindows
-    .replace(/http:\/\/[^\s'"]+/, `http://127.0.0.1:${server.address().port}/api/events`);
+  const command = config.hooks.PostToolUse[0].hooks[0].commandWindows;
+  const url = `http://127.0.0.1:${server.address().port}/api/events`;
   const shells = ["cmd.exe", "powershell.exe"];
-  if (existsSync(join(process.env.ProgramFiles ?? "C:/Program Files", "PowerShell/7/pwsh.exe"))) shells.push("pwsh.exe");
+  const pwsh = spawnSync("pwsh.exe", ["-NoProfile", "-NonInteractive", "-Command", "exit 0"], {
+    windowsHide: true, timeout: 3_000,
+  });
+  if (pwsh.status === 0) shells.push("pwsh.exe");
+  async function run(shell, endpoint) {
+    const cmd = shell === "cmd.exe";
+    const child = spawn(shell, cmd ? ["/d", "/s", "/c", `"${command}"`] : ["-NoProfile", "-NonInteractive", "-Command", command], {
+      windowsHide: true, windowsVerbatimArguments: cmd,
+      env: { ...process.env, USERPROFILE: directory, CODEX_HOME: join(directory, ".codex"), CODEX_DASHBOARD_URL: endpoint },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let output = "";
+    child.stdout.on("data", (chunk) => { output += chunk; });
+    child.stderr.on("data", (chunk) => { output += chunk; });
+    child.stdin.on("error", () => {});
+    const exited = once(child, "exit");
+    child.stdin.end(JSON.stringify({ session_id: "parent", hook_event_name: "PostToolUse", transcript_path: transcript,
+      tool_input: { command: "private-command" } }));
+    assert.equal((await exited)[0], 0, `${shell}: ${output}`);
+    assert.equal(output, "", shell);
+  }
+  let requests = 0;
+  server.on("request", () => { requests++; });
   for (const shell of shells) {
+    const before = requests;
+    await run(shell);
+    assert.equal(requests, before, shell);
     const received = new Promise((resolve) => server.once("request", async (request, response) => {
       let body = "";
       for await (const chunk of request) body += chunk;
       response.writeHead(204).end();
       resolve({ body: JSON.parse(body), headers: request.headers });
     }));
-    const cmd = shell === "cmd.exe";
-    const child = spawn(shell, cmd ? ["/d", "/s", "/c", `"${command}"`] : ["-NoProfile", "-NonInteractive", "-Command", command], {
-      windowsHide: true, windowsVerbatimArguments: cmd,
-      env: { ...process.env, USERPROFILE: directory, CODEX_HOME: join(directory, ".codex") },
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    let output = "";
-    child.stdout.on("data", (chunk) => { output += chunk; });
-    child.stderr.on("data", (chunk) => { output += chunk; });
-    const exited = once(child, "exit");
-    child.stdin.end(JSON.stringify({ session_id: "parent", hook_event_name: "PostToolUse", transcript_path: transcript,
-      tool_input: { command: "private-command" } }));
-    assert.equal((await exited)[0], 0, `${shell}: ${output}`);
-    assert.equal(output, "", shell);
+    await run(shell, url);
     const report = await received;
     assert.equal(report.headers["x-harness"], "codex");
     assert.ok(report.headers["x-machine"]);

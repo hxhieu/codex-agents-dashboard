@@ -148,7 +148,7 @@ export async function sendHook(harness, url) {
         "--silent", "--output", process.platform === "win32" ? "NUL" : "/dev/null",
         "--connect-timeout", "0.25", "--max-time", "1",
         "--header", "Content-Type:application/json", "--header", `X-Machine:${hostname()}`,
-        "--header", `X-Harness:${harness}`, "--data-binary", "@-", url,
+        "--header", `X-Harness:${harness}`, "--data-binary", "@-", "--", url,
       ], { windowsHide: true, timeout: 1500, stdio: ["pipe", "ignore", "ignore"] });
       child.once("error", resolve);
       child.once("close", resolve);

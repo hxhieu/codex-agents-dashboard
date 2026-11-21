@@ -7,12 +7,14 @@
   import ThemeToggle from './ThemeToggle.svelte';
   import WeeklyUsage from './WeeklyUsage.svelte';
 
+  let { android = false }: { android?: boolean } = $props();
   let agents = $state<Agent[]>([]);
   let connection = $state('Connecting');
   let query = $state('');
   let now = $state(Date.now());
   let gap = $state(false);
   let endpoint = $state('/api/events');
+  let receiver = $state<{ url?: string; status: string }>({ status: 'Starting Wi-Fi receiver…' });
   const families = $derived(groupAgents(agents));
   const visible = $derived(groupAgents(agents, query));
   const subagentCount = $derived(agents.filter((agent) => agent.parentSessionId).length);
@@ -42,6 +44,9 @@
       agents = applyEvent(agents, JSON.parse(message.data) as AgentEvent);
       now = Date.now();
     });
+    if (android) {
+      stream.addEventListener('receiver', (message) => { receiver = JSON.parse(message.data); });
+    }
     const clock = setInterval(() => { now = Date.now(); }, 1000);
     return () => { stream.close(); clearInterval(clock); updateTabAttention([]); };
   });
@@ -54,6 +59,11 @@
   </header>
 
   <main>
+    {#if android}
+      <div class="receiver" aria-live="polite">
+        {#if receiver.url}<span>Hook URL</span><code>{receiver.url}</code>{:else}{receiver.status}{/if}
+      </div>
+    {/if}
     <section class="summary" aria-label="Activity overview">
       <div><span class="metric">{agents.length.toString().padStart(2, '0')}</span><span>Sessions seen</span></div>
       <div><span class="metric">{subagentCount.toString().padStart(2, '0')}</span><span>Subagents</span></div>
@@ -76,7 +86,7 @@
           <p class="empty-label">READY WHEN YOUR AGENTS ARE</p>
           <h3>Waiting for the next update</h3>
           <p>Connect your Codex CLI hooks to this dashboard.<br />Sessions will appear here as their events arrive.</p>
-          <a href="#connect">Connect an agent <span aria-hidden="true">↗</span></a>
+          {#if !android}<a href="#connect">Connect an agent <span aria-hidden="true">↗</span></a>{/if}
         </div>
       {:else if !visible.length}
         <div class="no-results"><h3>No matching sessions</h3><p>Try another machine, project, or session ID.</p><button onclick={() => { query = ''; }}>Reset filter</button></div>
@@ -89,10 +99,10 @@
       {/if}
     </section>
 
-    <details id="connect" class="setup">
+    {#if !android}<details id="connect" class="setup">
       <summary><span><span class="setup-icon" aria-hidden="true">↗</span> Connect your Codex agents</span><span class="setup-hint">DIRECT HOOKS · NO COLLECTOR</span></summary>
       <div class="setup-body"><p>Use <code>hooks/codex.json</code> for Codex CLI or <code>hooks/claude-code.json</code> for Claude Code. Set the dashboard address before merging the hooks into your CLI settings.</p><pre><code>curl --max-time 1 -H "Content-Type: application/json" -H "X-Machine: my-pc" -H "X-Harness: codex" --data-binary @- {endpoint}</code></pre><p class="muted">A refreshed page starts empty. Silence means no recent update; it does not indicate that an agent is offline.</p></div>
-    </details>
+    </details>{/if}
     <footer class="page-footer"><span><span class="footer-dot"></span> A window into the work.</span><span>NO HISTORY. JUST NOW.</span></footer>
   </main>
 </div>
@@ -117,6 +127,8 @@
   .connection i, .footer-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
   .connection.connected i { background: var(--success); box-shadow: 0 0 0 3px var(--accent-soft); }
   main { padding-top: 16px; }
+  .receiver { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 8px; padding: 10px 12px; border-radius: 5px; background: var(--surface-raised); color: var(--muted); font-size: 12px; }
+  .receiver code { color: var(--text); overflow-wrap: anywhere; user-select: all; }
   .summary { display: flex; align-items: center; border-bottom: 1px solid var(--border); padding: 12px 0 20px; }
   .summary > div { display: flex; align-items: center; gap: 12px; padding-right: 28px; }
   .summary > div + div { border-left: 1px solid var(--border); padding-left: 28px; }

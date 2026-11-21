@@ -17,6 +17,7 @@ export function normalizeEvent(
   payload: unknown,
   machine: string | null,
   harnessHeader: string | null = null,
+  createId: () => string = () => crypto.randomUUID(),
 ): AgentEvent {
   // Existing installed hooks remain usable until their header is updated.
   const harness = harnessHeader === null ? "codex" : harnessHeader.trim().toLowerCase();
@@ -26,7 +27,7 @@ export function normalizeEvent(
   if (!machineName) throw new Error("The X-Machine header is required.");
   return {
     ...mapping.normalize(payload),
-    id: crypto.randomUUID(),
+    id: createId(),
     harness,
     harnessLabel: mapping.label,
     machine: machineName,

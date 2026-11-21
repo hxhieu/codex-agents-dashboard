@@ -71,6 +71,10 @@ test("both Codex hook configurations identify every reporter and preserve startu
           assert.match(hook.command, /--header X-Harness:codex/);
           assert.match(hook.commandWindows, /sendHook\('codex',/);
           assert.doesNotMatch(hook.commandWindows, /cmd\.exe/);
+          if (path === "../hooks/codex.json") {
+            assert.match(hook.command, /-- "\$CODEX_DASHBOARD_URL"/);
+            assert.match(hook.commandWindows, /process\.env\.CODEX_DASHBOARD_URL/);
+          }
           assert.match(hook.command, /--max-time 1/);
           assert.equal(hook.async, eventName !== "SessionEnd");
         }
